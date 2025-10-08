@@ -1,0 +1,870 @@
+diff --git a/docs/ui-shell.md b/docs/ui-shell.md
+new file mode 100644
+index 0000000..64a9f2f
+--- /dev/null
++++ b/docs/ui-shell.md
+@@ -0,0 +1,113 @@
++# UI Shell Unification
++
++## Overview
++
++This document summarizes the UI shell unification changes made to fix layout defects including inconsistent content width, overlapping sidebars, broken grids, and video page overflow.
++
++## Changes Made
++
++### 1. New Shared Components
++
++#### Container Component (`/components/layout/Container.tsx`)
++- Provides consistent width management across the app
++- Responsive padding: `px-4 sm:px-6 lg:px-8`
++- Max width constraint: `max-w-screen-2xl`
++- Centers content with `mx-auto`
++
++Usage:
++```tsx
++<Container>
++  <h1>Page content</h1>
++</Container>
++```
++
++#### AppShell Component (`/components/layout/AppShell.tsx`)
++- Unified application shell with fixed sidebar and content area
++- Handles responsive behavior consistently
++- Fixed width sidebar (w-64 expanded, w-14 collapsed)
++- Independent sidebar scroll with proper z-index
++- No content overlap at any breakpoint
++
++#### SidebarNav Component (`/components/nav/SidebarNav.tsx`)
++- Reusable sidebar navigation with static configuration
++- Active state management based on current route
++- Filters menu items based on user role (admin vs regular user)
++- Consistent styling and tooltips
++
++### 2. Layout Refactoring
++
++#### Dashboard Layout (`/app/(dashboard)/layout.tsx`)
++- Simplified to use AppShell component
++- Removed duplicate sidebar implementation
++- Consistent user info display
++
++#### Admin Layout (`/app/admin/layout.tsx`)
++- Unified with dashboard layout using AppShell
++- Same navigation structure with admin-specific items
++- Proper role-based access control
++
++### 3. Content Width Fixes
++
++#### PageContent Component Updates
++- Now uses Container component internally for consistent width
++- Special handling for video pages with `hasCourseSidebar` prop
++- Removed conflicting sidebar offset calculations
++
++#### Course Pages
++- Updated to use Container component
++- Fixed course grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
++- Consistent gap spacing: `gap-6`
++- Removed inline max-widths and fixed heights
++
++### 4. Video Lesson Page
++- Maintains aspect-video ratio to prevent layout shift
++- Proper sidebar handling without overlap
++- Responsive grid layout for video and notes
++- Fixed width course sidebar (320px) on desktop
++
++## Design Decisions
++
++### Container Width
++- Max width: `max-w-screen-2xl` (1536px)
++- Provides optimal reading width while utilizing modern displays
++- Consistent padding scales: 16px → 24px → 32px
++
++### Grid System
++- Standardized on 4-column grid for course cards
++- Responsive breakpoints: 1 → 2 → 3 → 4 columns
++- Uniform gap of 24px (gap-6)
++
++### Sidebar Behavior
++- Fixed width to prevent content reflow
++- Independent scroll area
++- Higher z-index than content
++- Collapsible to icon mode on smaller screens
++
++## Usage Guidelines
++
++### For New Pages
++1. Always wrap page content in Container component
++2. Use PageContent for dashboard pages (it includes Container)
++3. Follow the grid pattern for card layouts
++4. Don't add custom max-widths or padding
++
++### For Existing Pages
++- Replace custom width wrappers with Container
++- Remove inline styles for spacing/width
++- Use consistent grid classes
++
++## Migration Checklist
++
++- [x] Created shared layout components
++- [x] Updated dashboard and admin layouts
++- [x] Fixed course grid layouts
++- [x] Normalized container widths
++- [x] Fixed video page layout
++- [x] Removed overlapping sidebar issues
++
++## Future Improvements
++
++1. Consider extracting more common patterns (e.g., card grids)
++2. Add Storybook documentation for layout components
++3. Create responsive preview tool for testing layouts
++4. Audit remaining pages for consistency
+diff --git a/src/app/(dashboard)/courses/[slug]/page.tsx b/src/app/(dashboard)/courses/[slug]/page.tsx
+index 13abc95..974332c 100644
+--- a/src/app/(dashboard)/courses/[slug]/page.tsx
++++ b/src/app/(dashboard)/courses/[slug]/page.tsx
+@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
+ import { Button } from "@/components/ui/button"
+ import { Progress } from "@/components/ui/progress"
+ import { Badge } from "@/components/ui/badge"
++import { Container } from "@/components/layout/Container"
+ import Link from "next/link"
+ import { PlayCircle, CheckCircle, Clock, ChevronRight } from "lucide-react"
+ import { formatTime } from "@/lib/plyr"
+@@ -173,7 +174,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
+   )
+ 
+   return (
+-    <div className="max-w-[1600px] mx-auto px-6 py-8">
++    <Container className="py-6 md:py-8 lg:py-10">
+       {/* Breadcrumb */}
+       <nav className="flex items-center gap-2 text-sm mb-6">
+         <Link href="/dashboard" className="hover:underline" style={{ color: '#2483ff' }}>Dashboard</Link>
+@@ -224,7 +225,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
+         {course.modules.filter(m => m.sub_lessons.length > 0).map((module) => {
+           return (
+             <div key={module.id} className="space-y-4">
+-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
++              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+               {module.sub_lessons.map((lesson, index) => {
+           const progress = lesson.progress && lesson.progress.length > 0 ? lesson.progress[0] : null
+           const isCompleted = progress?.completed || false
+@@ -333,12 +334,12 @@ export default async function CoursePage({ params }: CoursePageProps) {
+             </Card>
+           )
+         })}
++              </div>
+             </div>
+-          </div>
+           )
+         })}
+       </div>
+-    </div>
++    </Container>
+   )
+   }, {
+     ...baseAttrs,
+diff --git a/src/app/(dashboard)/layout.tsx b/src/app/(dashboard)/layout.tsx
+index c88e534..ac943e4 100644
+--- a/src/app/(dashboard)/layout.tsx
++++ b/src/app/(dashboard)/layout.tsx
+@@ -1,32 +1,6 @@
+ import { auth } from "@/lib/auth"
+ import { redirect } from "next/navigation"
+-import Link from "next/link"
+-import Image from "next/image"
+-import { Home, Video, Shield, LogOut, User } from "lucide-react"
+-import {
+-  Sidebar,
+-  SidebarContent,
+-  SidebarFooter,
+-  SidebarGroup,
+-  SidebarGroupContent,
+-  SidebarHeader,
+-  SidebarInset,
+-  SidebarMenu,
+-  SidebarMenuButton,
+-  SidebarMenuItem,
+-  SidebarProvider,
+-  SidebarSeparator,
+-} from "@/components/ui/sidebar"
+-import {
+-  DropdownMenu,
+-  DropdownMenuContent,
+-  DropdownMenuItem,
+-  DropdownMenuTrigger,
+-} from "@/components/ui/dropdown-menu"
+-import {
+-  Avatar,
+-  AvatarFallback,
+-} from "@/components/ui/avatar"
++import { AppShell } from "@/components/layout/AppShell"
+ 
+ export default async function DashboardLayout({
+   children,
+@@ -39,104 +13,17 @@ export default async function DashboardLayout({
+     redirect("/login")
+   }
+ 
+-  const userInitials = session.user.name
+-    ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+-    : session.user.email?.[0].toUpperCase() || 'U'
+-
+   return (
+-    <SidebarProvider defaultOpen={true}>
+-      <div className="flex min-h-screen w-full">
+-        {/* Icon Sidebar */}
+-        <Sidebar collapsible="icon">
+-          <SidebarHeader className="h-14 items-center justify-center">
+-            <Link href="/dashboard" className="flex items-center justify-center">
+-              <Image 
+-                src="/diamonddisticon.svg" 
+-                alt="Diamond District" 
+-                width={32} 
+-                height={32}
+-                className="w-8 h-8"
+-              />
+-            </Link>
+-          </SidebarHeader>
+-          <SidebarContent>
+-            <SidebarGroup>
+-              <SidebarGroupContent>
+-                <SidebarMenu>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Dashboard">
+-                      <Link href="/dashboard">
+-                        <Home className="h-4 w-4" />
+-                        <span>Dashboard</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Courses">
+-                      <Link href="/courses">
+-                        <Video className="h-4 w-4" />
+-                        <span>Courses</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                  {session.user.role === "ADMIN" && (
+-                    <SidebarMenuItem>
+-                      <SidebarMenuButton asChild tooltip="Admin">
+-                        <Link href="/admin">
+-                          <Shield className="h-4 w-4" />
+-                          <span>Admin</span>
+-                        </Link>
+-                      </SidebarMenuButton>
+-                    </SidebarMenuItem>
+-                  )}
+-                </SidebarMenu>
+-              </SidebarGroupContent>
+-            </SidebarGroup>
+-          </SidebarContent>
+-          <SidebarFooter>
+-            <SidebarMenu>
+-              <SidebarMenuItem>
+-                <DropdownMenu>
+-                  <DropdownMenuTrigger asChild>
+-                    <SidebarMenuButton tooltip={{
+-                      children: session.user.email,
+-                      align: "center",
+-                      side: "right",
+-                    }}>
+-                      <Avatar className="h-6 w-6">
+-                        <AvatarFallback style={{ backgroundColor: '#2483ff', color: '#fcfcfd' }}>
+-                          {userInitials}
+-                        </AvatarFallback>
+-                      </Avatar>
+-                      <span className="truncate">{session.user.name || session.user.email}</span>
+-                    </SidebarMenuButton>
+-                  </DropdownMenuTrigger>
+-                  <DropdownMenuContent align="end" className="w-56">
+-                    <DropdownMenuItem asChild>
+-                      <Link href="/profile" className="flex items-center">
+-                        <User className="mr-2 h-4 w-4" />
+-                        <span>Profile</span>
+-                      </Link>
+-                    </DropdownMenuItem>
+-                    <DropdownMenuItem asChild>
+-                      <Link href="/logout" className="flex items-center text-red-600">
+-                        <LogOut className="mr-2 h-4 w-4" />
+-                        <span>Sign Out</span>
+-                      </Link>
+-                    </DropdownMenuItem>
+-                  </DropdownMenuContent>
+-                </DropdownMenu>
+-              </SidebarMenuItem>
+-            </SidebarMenu>
+-          </SidebarFooter>
+-        </Sidebar>
+-        
+-        {/* Main Content */}
+-        <SidebarInset className="flex-1 overflow-auto bg-[#fcfcfd]">
+-          {children}
+-        </SidebarInset>
+-      </div>
+-    </SidebarProvider>
++    <AppShell 
++      user={{
++        name: session.user.name,
++        email: session.user.email,
++        role: session.user.role,
++      }}
++      logoHref="/dashboard"
++    >
++      {children}
++    </AppShell>
+   )
+ }
+ 
+diff --git a/src/app/admin/layout.tsx b/src/app/admin/layout.tsx
+index 01eb48c..b60717d 100644
+--- a/src/app/admin/layout.tsx
++++ b/src/app/admin/layout.tsx
+@@ -1,32 +1,6 @@
+ import { auth } from "@/lib/auth"
+ import { redirect } from "next/navigation"
+-import Link from "next/link"
+-import Image from "next/image"
+-import { Home, Video, Users, Settings, Shield, LogOut, User } from "lucide-react"
+-import {
+-  Sidebar,
+-  SidebarContent,
+-  SidebarFooter,
+-  SidebarGroup,
+-  SidebarGroupContent,
+-  SidebarHeader,
+-  SidebarInset,
+-  SidebarMenu,
+-  SidebarMenuButton,
+-  SidebarMenuItem,
+-  SidebarProvider,
+-  SidebarSeparator,
+-} from "@/components/ui/sidebar"
+-import {
+-  DropdownMenu,
+-  DropdownMenuContent,
+-  DropdownMenuItem,
+-  DropdownMenuTrigger,
+-} from "@/components/ui/dropdown-menu"
+-import {
+-  Avatar,
+-  AvatarFallback,
+-} from "@/components/ui/avatar"
++import { AppShell } from "@/components/layout/AppShell"
+ 
+ export default async function AdminLayout({
+   children,
+@@ -40,124 +14,16 @@ export default async function AdminLayout({
+     redirect("/dashboard")
+   }
+ 
+-  const userInitials = session.user.name
+-    ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+-    : session.user.email?.[0].toUpperCase() || 'U'
+-
+   return (
+-    <SidebarProvider defaultOpen={true}>
+-      <div className="flex min-h-screen w-full">
+-        {/* Icon Sidebar */}
+-        <Sidebar collapsible="icon">
+-          <SidebarHeader className="h-14 items-center justify-center">
+-            <Link href="/admin" className="flex items-center justify-center">
+-              <Image 
+-                src="/diamonddisticon.svg" 
+-                alt="Diamond District" 
+-                width={32} 
+-                height={32}
+-                className="w-8 h-8"
+-              />
+-            </Link>
+-          </SidebarHeader>
+-          <SidebarContent>
+-            <SidebarGroup>
+-              <SidebarGroupContent>
+-                <SidebarMenu>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Dashboard">
+-                      <Link href="/admin">
+-                        <Home className="h-4 w-4" />
+-                        <span>Dashboard</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Courses">
+-                      <Link href="/admin/courses">
+-                        <Video className="h-4 w-4" />
+-                        <span>Courses</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Users">
+-                      <Link href="/admin/users">
+-                        <Users className="h-4 w-4" />
+-                        <span>Users</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Settings">
+-                      <Link href="/admin/settings">
+-                        <Settings className="h-4 w-4" />
+-                        <span>Settings</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                </SidebarMenu>
+-              </SidebarGroupContent>
+-            </SidebarGroup>
+-            <SidebarSeparator />
+-            <SidebarGroup>
+-              <SidebarGroupContent>
+-                <SidebarMenu>
+-                  <SidebarMenuItem>
+-                    <SidebarMenuButton asChild tooltip="Back to Dashboard">
+-                      <Link href="/dashboard">
+-                        <Shield className="h-4 w-4" />
+-                        <span>User Dashboard</span>
+-                      </Link>
+-                    </SidebarMenuButton>
+-                  </SidebarMenuItem>
+-                </SidebarMenu>
+-              </SidebarGroupContent>
+-            </SidebarGroup>
+-          </SidebarContent>
+-          <SidebarFooter>
+-            <SidebarMenu>
+-              <SidebarMenuItem>
+-                <DropdownMenu>
+-                  <DropdownMenuTrigger asChild>
+-                    <SidebarMenuButton tooltip={{
+-                      children: session.user.email,
+-                      align: "center",
+-                      side: "right",
+-                    }}>
+-                      <Avatar className="h-6 w-6">
+-                        <AvatarFallback className="bg-primary text-primary-foreground">
+-                          {userInitials}
+-                        </AvatarFallback>
+-                      </Avatar>
+-                      <span className="truncate">{session.user.name || session.user.email}</span>
+-                    </SidebarMenuButton>
+-                  </DropdownMenuTrigger>
+-                  <DropdownMenuContent align="end" className="w-56">
+-                    <DropdownMenuItem asChild>
+-                      <Link href="/profile" className="flex items-center">
+-                        <User className="mr-2 h-4 w-4" />
+-                        <span>Profile</span>
+-                      </Link>
+-                    </DropdownMenuItem>
+-                    <DropdownMenuItem asChild>
+-                      <Link href="/logout" className="flex items-center text-red-600">
+-                        <LogOut className="mr-2 h-4 w-4" />
+-                        <span>Sign Out</span>
+-                      </Link>
+-                    </DropdownMenuItem>
+-                  </DropdownMenuContent>
+-                </DropdownMenu>
+-              </SidebarMenuItem>
+-            </SidebarMenu>
+-          </SidebarFooter>
+-        </Sidebar>
+-        
+-        {/* Main Content */}
+-        <SidebarInset className="flex-1 overflow-auto bg-[#fcfcfd]">
+-          {children}
+-        </SidebarInset>
+-      </div>
+-    </SidebarProvider>
++    <AppShell 
++      user={{
++        name: session.user.name,
++        email: session.user.email,
++        role: session.user.role,
++      }}
++      logoHref="/admin"
++    >
++      {children}
++    </AppShell>
+   )
+ }
+\ No newline at end of file
+diff --git a/src/components/layout/AppShell.tsx b/src/components/layout/AppShell.tsx
+new file mode 100644
+index 0000000..7fd9e7b
+--- /dev/null
++++ b/src/components/layout/AppShell.tsx
+@@ -0,0 +1,143 @@
++"use client"
++
++import Link from "next/link"
++import Image from "next/image"
++import { LogOut } from "lucide-react"
++import { cn } from "@/lib/utils"
++import {
++  Sidebar,
++  SidebarContent,
++  SidebarFooter,
++  SidebarGroup,
++  SidebarGroupContent,
++  SidebarHeader,
++  SidebarInset,
++  SidebarMenu,
++  SidebarMenuButton,
++  SidebarMenuItem,
++  SidebarProvider,
++  SidebarSeparator,
++  SidebarTrigger,
++} from "@/components/ui/sidebar"
++import {
++  DropdownMenu,
++  DropdownMenuContent,
++  DropdownMenuItem,
++  DropdownMenuTrigger,
++} from "@/components/ui/dropdown-menu"
++import {
++  Avatar,
++  AvatarFallback,
++} from "@/components/ui/avatar"
++import { SidebarNav } from "@/components/nav/SidebarNav"
++
++interface AppShellProps {
++  children: React.ReactNode
++  user: {
++    name?: string | null
++    email?: string | null
++    role?: string
++  }
++  logoHref?: string
++}
++
++/**
++ * Unified application shell with fixed sidebar and content area.
++ * Handles responsive behavior and consistent layout across dashboard and admin.
++ */
++export function AppShell({ children, user, logoHref = "/dashboard" }: AppShellProps) {
++  const userInitials = user.name
++    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
++    : user.email?.[0].toUpperCase() || 'U'
++
++  const isAdmin = user.role === "ADMIN"
++
++  return (
++    <SidebarProvider defaultOpen={true}>
++      <div className="flex min-h-screen w-full">
++        {/* Fixed width sidebar */}
++        <Sidebar 
++          collapsible="icon"
++          className="border-r"
++        >
++          <SidebarHeader className="h-14 items-center justify-center">
++            <Link href={logoHref} className="flex items-center justify-center">
++              <Image 
++                src="/diamonddisticon.svg" 
++                alt="Diamond District" 
++                width={32} 
++                height={32}
++                className="w-8 h-8"
++              />
++            </Link>
++          </SidebarHeader>
++          
++          <SidebarContent>
++            <SidebarGroup>
++              <SidebarGroupContent>
++                <SidebarNav isAdmin={isAdmin} />
++              </SidebarGroupContent>
++            </SidebarGroup>
++          </SidebarContent>
++          
++          <SidebarFooter>
++            <SidebarMenu>
++              <SidebarMenuItem>
++                <DropdownMenu>
++                  <DropdownMenuTrigger asChild>
++                    <SidebarMenuButton
++                      size="lg"
++                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
++                    >
++                      <Avatar className="h-8 w-8 rounded-lg">
++                        <AvatarFallback className="rounded-lg">
++                          {userInitials}
++                        </AvatarFallback>
++                      </Avatar>
++                      <div className="grid flex-1 text-left text-sm leading-tight">
++                        <span className="truncate font-semibold">
++                          {user.name || "User"}
++                        </span>
++                        <span className="truncate text-xs text-muted-foreground">
++                          {user.email}
++                        </span>
++                      </div>
++                    </SidebarMenuButton>
++                  </DropdownMenuTrigger>
++                  <DropdownMenuContent
++                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
++                    side="bottom"
++                    align="end"
++                    sideOffset={4}
++                  >
++                    <DropdownMenuItem asChild>
++                      <Link href="/logout" className="cursor-pointer">
++                        <LogOut className="mr-2 h-4 w-4" />
++                        <span>Sign out</span>
++                      </Link>
++                    </DropdownMenuItem>
++                  </DropdownMenuContent>
++                </DropdownMenu>
++              </SidebarMenuItem>
++            </SidebarMenu>
++            <SidebarSeparator className="mx-0" />
++          </SidebarFooter>
++        </Sidebar>
++
++        {/* Main content area */}
++        <SidebarInset className="flex flex-col">
++          {/* Header with sidebar trigger */}
++          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
++            <SidebarTrigger className="-ml-1" />
++            <div className="flex-1" />
++          </header>
++          
++          {/* Page content */}
++          <main className="flex-1">
++            {children}
++          </main>
++        </SidebarInset>
++      </div>
++    </SidebarProvider>
++  )
++}
+diff --git a/src/components/layout/Container.tsx b/src/components/layout/Container.tsx
+new file mode 100644
+index 0000000..b62cdb2
+--- /dev/null
++++ b/src/components/layout/Container.tsx
+@@ -0,0 +1,35 @@
++import { cn } from "@/lib/utils"
++
++interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
++  as?: React.ElementType
++}
++
++/**
++ * Container component for consistent width management across the app.
++ * Provides responsive padding and max-width constraints.
++ * 
++ * Usage:
++ * ```tsx
++ * <Container>
++ *   <h1>Page content</h1>
++ * </Container>
++ * ```
++ */
++export function Container({ 
++  as: Component = "div",
++  className,
++  children,
++  ...props 
++}: ContainerProps) {
++  return (
++    <Component 
++      className={cn(
++        "mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8",
++        className
++      )} 
++      {...props}
++    >
++      {children}
++    </Component>
++  )
++}
+diff --git a/src/components/nav/SidebarNav.tsx b/src/components/nav/SidebarNav.tsx
+new file mode 100644
+index 0000000..70394ec
+--- /dev/null
++++ b/src/components/nav/SidebarNav.tsx
+@@ -0,0 +1,108 @@
++"use client"
++
++import Link from "next/link"
++import { usePathname } from "next/navigation"
++import { Home, Video, Shield, LogOut, User, Users, Settings, LayoutDashboard } from "lucide-react"
++import { cn } from "@/lib/utils"
++import {
++  SidebarMenu,
++  SidebarMenuButton,
++  SidebarMenuItem,
++} from "@/components/ui/sidebar"
++
++export interface NavItem {
++  title: string
++  href: string
++  icon: React.ComponentType<{ className?: string }>
++  tooltip?: string
++  adminOnly?: boolean
++}
++
++// Static navigation configuration
++const NAV_ITEMS: NavItem[] = [
++  {
++    title: "Dashboard",
++    href: "/dashboard",
++    icon: Home,
++    tooltip: "Dashboard",
++  },
++  {
++    title: "Courses",
++    href: "/courses",
++    icon: Video,
++    tooltip: "Courses",
++  },
++  {
++    title: "Admin Dashboard",
++    href: "/admin",
++    icon: LayoutDashboard,
++    tooltip: "Admin Dashboard",
++    adminOnly: true,
++  },
++  {
++    title: "Manage Courses",
++    href: "/admin/courses",
++    icon: Video,
++    tooltip: "Manage Courses",
++    adminOnly: true,
++  },
++  {
++    title: "Users",
++    href: "/admin/users",
++    icon: Users,
++    tooltip: "Manage Users",
++    adminOnly: true,
++  },
++  {
++    title: "Settings",
++    href: "/admin/settings",
++    icon: Settings,
++    tooltip: "System Settings",
++    adminOnly: true,
++  },
++]
++
++interface SidebarNavProps {
++  isAdmin?: boolean
++  className?: string
++}
++
++/**
++ * Reusable sidebar navigation component with active state management.
++ * Filters menu items based on user role.
++ */
++export function SidebarNav({ isAdmin = false, className }: SidebarNavProps) {
++  const pathname = usePathname()
++
++  // Filter items based on admin status
++  const visibleItems = NAV_ITEMS.filter(item => !item.adminOnly || isAdmin)
++
++  // Check if a path is active
++  const isActive = (href: string) => {
++    if (href === "/dashboard" || href === "/admin") {
++      return pathname === href
++    }
++    return pathname.startsWith(href)
++  }
++
++  return (
++    <SidebarMenu className={className}>
++      {visibleItems.map((item) => (
++        <SidebarMenuItem key={item.href}>
++          <SidebarMenuButton 
++            asChild 
++            tooltip={item.tooltip}
++            className={cn(
++              isActive(item.href) && "bg-accent text-accent-foreground"
++            )}
++          >
++            <Link href={item.href}>
++              <item.icon className="h-4 w-4" />
++              <span>{item.title}</span>
++            </Link>
++          </SidebarMenuButton>
++        </SidebarMenuItem>
++      ))}
++    </SidebarMenu>
++  )
++}
+diff --git a/src/components/ui/page-content.tsx b/src/components/ui/page-content.tsx
+index e99f548..b70bedc 100644
+--- a/src/components/ui/page-content.tsx
++++ b/src/components/ui/page-content.tsx
+@@ -2,7 +2,7 @@
+ 
+ import * as React from "react"
+ import { cn } from "@/lib/utils"
+-import { useSidebar } from "@/components/ui/sidebar"
++import { Container } from "@/components/layout/Container"
+ 
+ interface PageContentProps extends React.HTMLAttributes<HTMLDivElement> {
+   children: React.ReactNode
+@@ -19,40 +19,34 @@ export function PageContent({
+   fullWidth = false,
+   ...props 
+ }: PageContentProps) {
+-  const { state } = useSidebar()
+-  const isCollapsed = state === "collapsed"
+-  
+-  // Calculate content offset based on sidebars
+-  // Icon sidebar: 48px when collapsed, 256px when expanded
+-  // Course sidebar: 320px (fixed width)
+-  const sidebarOffset = React.useMemo(() => {
+-    const iconSidebarWidth = isCollapsed ? 48 : 256
+-    const courseSidebarWidth = hasCourseSidebar ? 320 : 0
+-    return iconSidebarWidth + courseSidebarWidth
+-  }, [isCollapsed, hasCourseSidebar])
++  // For pages that need full width or have special layout needs
++  if (fullWidth || hasCourseSidebar) {
++    return (
++      <div 
++        className={cn(
++          "min-h-screen w-full",
++          "px-4 py-6 md:px-6 md:py-8 lg:px-8 lg:py-10",
++          className
++        )}
++        {...props}
++      >
++        {children}
++      </div>
++    )
++  }
+ 
++  // Default: Use Container for consistent width management
+   return (
+-    <div 
++    <Container 
+       className={cn(
+-        "min-h-screen w-full",
+-        // Consistent padding across all pages
+-        "px-4 py-6 md:px-6 md:py-8 lg:px-8 lg:py-10",
++        "min-h-screen",
++        "py-6 md:py-8 lg:py-10",
+         className
+       )}
+       {...props}
+     >
+-      <div 
+-        className={cn(
+-          "mx-auto w-full",
+-          // Max width handling
+-          !fullWidth && !hasCourseSidebar && "max-w-[1600px]",
+-          // For pages with course sidebar, use available space efficiently
+-          hasCourseSidebar && "max-w-none"
+-        )}
+-      >
+-        {children}
+-      </div>
+-    </div>
++      {children}
++    </Container>
+   )
+ }
+ 

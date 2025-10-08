@@ -1,0 +1,39 @@
+Category,Description,Current Value/Pattern,Desired Standard,Files/Lines,Impact (L/M/H),Effort (L/M/H)
+Color,Primary color inconsistency in MuxPlayer,"#3b82f6",#15AEE9 (--color-primary),src/styles/mux-player.css:3; src/components/MuxPlayerEnhanced.tsx:537,H,L
+Color,Primary color variant in MuxPlayerUncontrolled,"#17ADE9",#15AEE9 (--color-primary),src/components/MuxPlayerUncontrolled.tsx:314,H,L
+Color,Red accent in MuxLessonPlayer,"#FF0000",#15AEE9 (--color-primary),src/components/MuxLessonPlayer.tsx:286,H,L
+Color,Hardcoded gray colors,"bg-gray-50, bg-gray-900","--color-bg-base, --color-bg-canvas",src/app/(dashboard)/layout.tsx:59,M,M
+Color,Mixed text color utilities,"text-muted-foreground, text-gray-600",text-muted-foreground only,Multiple files,M,M
+Spacing,Inconsistent container padding,"px-4, p-4, p-6, p-8",p-4 mobile / p-6 desktop,src/app/admin/page.tsx; src/app/(dashboard)/dashboard/page.tsx,M,L
+Spacing,Card padding variations,"p-4 to p-6",Standardize to p-4,src/components/admin/user-search.tsx:73,M,L
+Spacing,Gap value inconsistencies,"gap-2, gap-3, gap-4, gap-6",Use consistent scale,Multiple components,M,M
+Typography,Font size mixing,Mix of Tailwind and custom,Use token scale only,src/app/page.tsx:39 (text-6xl/7xl),L,M
+Typography,Font weight inconsistencies,No standardized scale,Create weight tokens,Multiple files,L,L
+Components,5 different video players,Multiple implementations,Single configurable component,"MuxPlayerEnhanced, MuxPlayerUncontrolled, MuxLessonPlayer, video-player-enhanced, video-player-client",H,H
+Components,3 lesson list variants,"lesson-list, lesson-list-draggable, lesson-list-with-polling",Single component with props,src/components/admin/lesson-list*.tsx,M,M
+Components,Multiple upload implementations,Different upload patterns,Unified upload component,src/components/admin/lesson-upload-*.tsx,M,M
+Icons,Inconsistent icon sizes,"h-4 w-4, h-5 w-5, h-6 w-6",sm:4 / md:5 / lg:6 standard,Multiple files,L,L
+Icons,No icon component wrapper,Direct lucide-react usage,Create Icon wrapper component,All components,L,M
+Motion,Mixed transition approaches,Tailwind + custom CSS,Unified motion tokens,src/app/globals.css:221-252; Multiple components,M,M
+Motion,No reduced motion support,Missing prefers-reduced-motion,Add motion tokens with support,All animations,H,M
+Responsive,Inconsistent breakpoint usage,"Some md:, others lg:",Mobile-first with consistent breaks,Multiple files,M,M
+Responsive,Fixed heights on components,Fixed pixel heights,Use responsive units,Various components,M,M
+Responsive,Tables not mobile-friendly,Horizontal scroll required,Responsive table component,Admin tables,H,H
+Responsive,Touch targets too small,Buttons/links < 44px,Minimum 44px targets,Multiple buttons,H,L
+Accessibility,Low contrast muted text,#A9B2BE on dark background,Increase contrast ratio,src/app/globals.css:75,H,L
+Accessibility,Missing aria-labels,Icon-only buttons unlabeled,Add descriptive labels,Multiple icon buttons,H,L
+Accessibility,No skip navigation,Missing skip links,Add skip to main content,All layouts,H,L
+Accessibility,Form inputs missing labels,Some inputs without labels,Ensure all inputs labeled,Various forms,H,M
+Z-Index,No formal z-index scale,Ad-hoc z-index values,Create z-index tokens,src/app/globals.css:319; Multiple components,M,L
+Shadows,Duplicate shadow systems,Tailwind + Porto Rocha,Use Porto Rocha shadows only,src/app/globals.css:214-217,L,L
+Forms,Inconsistent validation UI,Different error displays,Standardize with FormMessage,Multiple forms,M,M
+Forms,No loading button states,Missing loading indicators,Add loading prop to Button,All async buttons,M,M
+Loading,Underused skeleton component,Most use 'Loading...' text,Replace with Skeleton,All loading states,M,M
+Loading,No consistent loading patterns,Various loading approaches,Create LoadingState component,Multiple files,M,M
+Empty States,Inconsistent empty states,Some text-only / some with icons,Create EmptyState component,All list views,M,M
+Tables,No reusable table component,Custom implementations,Build standard Table,Admin lists,H,H
+Navigation,No breadcrumb component,Missing breadcrumbs,Add Breadcrumb component,Deep navigation pages,M,M
+Layout,Sidebar implementation varies,Different sidebar patterns,Standardize sidebar component,SubLesson pages,M,H
+Theme,Incomplete dark mode support,Some components not themed,Full dark mode coverage,Various components,M,M
+Assets,No image component,Direct img tags,Create Image wrapper,Multiple files,L,M
+Bundle,No component code-splitting,All components bundled,Lazy load heavy components,Large components,M,H
