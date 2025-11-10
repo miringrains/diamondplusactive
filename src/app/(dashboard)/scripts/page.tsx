@@ -5,7 +5,10 @@ export default async function ScriptsPage() {
   // Fetch script videos from database
   const scriptVideos = await prisma.script_videos.findMany({
     where: {
-      published: true
+      published: true,
+      mux_playback_id: {
+        not: null
+      }
     },
     orderBy: {
       order: 'asc'

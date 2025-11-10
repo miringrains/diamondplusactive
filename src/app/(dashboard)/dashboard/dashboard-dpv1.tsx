@@ -7,10 +7,16 @@ import { CalendarDays, FileText, HelpCircle, Mic, Play, Video, Bot, Users, Scrol
 import { getRecentPodcasts, getWelcomeVideos } from "@/lib/loaders/dashboard"
 import { PodcastPlayer } from "@/components/podcast-player"
 import { MuxThumbnail } from "@/components/mux-thumbnail"
+import { PasswordSetupNotice } from "@/components/password-setup-notice"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
   const podcasts = await getRecentPodcasts()
   const welcomeVideos = await getWelcomeVideos()
+  
+  // Get current user for password setup notice
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   return (
     <div className="">
@@ -37,6 +43,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className="px-6 lg:px-12 py-12 lg:py-16">
+        {/* Password Setup Notice */}
+        {user && <PasswordSetupNotice user={user} />}
+        
         {/* Module Rail */}
         <section className="relative">
           <div className="mb-8">
@@ -187,9 +196,16 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-sm text-gray-600 mb-6">Weekly coaching calls with the community</p>
-                <Button className="w-full bg-[#176FFF] hover:bg-[#1460E5] text-white" asChild>
-                  <Link href="/group-calls">Join Call</Link>
-                </Button>
+                <div className="space-y-3">
+                  <Button className="w-full bg-[#176FFF] hover:bg-[#1460E5] text-white" asChild>
+                    <a href="https://us02web.zoom.us/j/86016843275?pwd=JYZHQSMTSj2FysBwGOu9ftjuaagNpB.1" target="_blank" rel="noopener noreferrer">
+                      Join Live Session
+                    </a>
+                  </Button>
+                  <Button className="w-full bg-white hover:bg-gray-50 text-[#176FFF] border border-[#176FFF]" asChild>
+                    <Link href="/group-calls">View Replays</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -278,6 +294,28 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+        </section>
+        
+        {/* Support Section */}
+        <section className="mt-12">
+          <Card className="bg-gradient-to-r from-[#1F1F23] to-[#2A2A30] border-none">
+            <CardContent className="p-8 text-center">
+              <HelpCircle className="h-10 w-10 text-[#176FFF] mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Email any questions, concerns, feedback here
+              </h3>
+              <p className="text-white/70 mb-6">
+                Our support team is here to help you succeed
+              </p>
+              <Button 
+                className="bg-[#176FFF] hover:bg-[#1460E5] text-white" 
+                size="lg"
+                asChild
+              >
+                <Link href="/help">Get Support</Link>
+              </Button>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </div>

@@ -9,12 +9,12 @@ export function createClient() {
   if (!url) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
   if (!anonKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
   
-  // For browser environment, we use the createBrowserClient which handles cookies automatically
+  // Simple browser client - the SSR package handles cookies automatically
   return createSupabaseBrowserClient<Database>(url, anonKey, {
     auth: {
-      detectSessionInUrl: true, // Let Supabase handle PKCE codes from URLs
       persistSession: true,
-      autoRefreshToken: true
+      autoRefreshToken: true,
+      detectSessionInUrl: false // We handle this manually in our routes
     }
   })
 }

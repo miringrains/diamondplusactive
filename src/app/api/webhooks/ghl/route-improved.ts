@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     console.log('[GHL Webhook] Sending password reset email to:', email)
     
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'}/reset-password`
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'}/dashboard`
     })
 
     if (resetError) {

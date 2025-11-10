@@ -32,7 +32,6 @@ interface ProfileClientProps {
 export default function ProfileClient({ initialUser }: ProfileClientProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialUser.avatar_url || null)
@@ -45,6 +44,26 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = getSupabaseBrowserClient()
+
+  // Format phone number as (XXX) XXX-XXXX
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '')
+    
+    // Format based on length
+    if (numbers.length <= 3) {
+      return numbers
+    } else if (numbers.length <= 6) {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3)}`
+    } else {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`
+    }
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value)
+    setFormData({...formData, phone: formatted})
+  }
 
   useEffect(() => {
     // Load profile data
@@ -70,12 +89,13 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
           setAvatarUrl(profileData.avatar_url || avatarUrl)
           
           // Update form data with profile data
+          // Note: phone, location, bio are now dedicated columns (not in metadata)
           setFormData(prev => ({
             ...prev,
             name: profileData.full_name || prev.name,
-            phone: (profileData.metadata as any)?.phone || prev.phone,
-            location: (profileData.metadata as any)?.location || prev.location,
-            bio: (profileData.metadata as any)?.bio || prev.bio
+            phone: profileData.phone || prev.phone,
+            location: profileData.location || prev.location,
+            bio: profileData.bio || prev.bio
           }))
         }
       } catch (error) {
@@ -128,7 +148,6 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
     setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
-    const currentPassword = formData.get('currentPassword') as string
     const newPassword = formData.get('newPassword') as string
     const confirmPassword = formData.get('confirmPassword') as string
 
@@ -147,7 +166,6 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currentPassword,
           newPassword,
         }),
       })
@@ -171,42 +189,6 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
     }
   }
 
-  const handleEmailChange = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-
-    try {
-      const response = await fetch('/api/profile/change-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to change email')
-      }
-
-      toast.success("Email change initiated", {
-        description: data.message || "Please check your inbox to confirm the email change.",
-      })
-      setIsEmailDialogOpen(false)
-    } catch (error: any) {
-      toast.error("Error", {
-        description: error.message || "Failed to change email",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -403,9 +385,10 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
                     id="phone" 
                     type="tel" 
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    placeholder="+1 (555) 000-0000"
+                    onChange={handlePhoneChange}
+                    placeholder="(555) 123-4567"
                     className="input-field"
+                    maxLength={14}
                   />
                 </div>
                 <div className="space-y-2">
@@ -450,54 +433,6 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
           </CardContent>
         </Card>
 
-        {/* Change Email */}
-        <Card className="card-secondary">
-          <CardHeader>
-            <CardTitle>Change Email Address</CardTitle>
-            <CardDescription>Update the email address associated with your account.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="btn-secondary">Change Email</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Change Email</DialogTitle>
-                  <DialogDescription>
-                    Enter your new email address. A confirmation link will be sent to the new address.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleEmailChange} className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">New Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      className="input-field"
-                      placeholder="new@example.com"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit" className="btn-primary" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        'Send Confirmation'
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-
         {/* Change Password */}
         <Card className="card-secondary">
           <CardHeader>
@@ -513,20 +448,10 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
                 <DialogHeader>
                   <DialogTitle>Change Password</DialogTitle>
                   <DialogDescription>
-                    Enter your current password and new password.
+                    Enter your new password.
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleChangePassword} className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      required
-                      className="input-field"
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
                     <Input

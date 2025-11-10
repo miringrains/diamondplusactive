@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail, Check } from "lucide-react"
 import Link from "next/link"
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 interface LoginFormProps {
   redirectTo?: string
@@ -16,36 +17,73 @@ interface LoginFormProps {
 export default function LoginForm({ redirectTo = '/dashboard', message, authError }: LoginFormProps = {}) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [checkingUser, setCheckingUser] = useState(false)
+  const [userExists, setUserExists] = useState<boolean | null>(null)
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
   
-        useEffect(() => {
-          // Handle messages from URL params
-          if (authError === 'auth_error') {
-            setError('Authentication failed. Please try again.')
-          } else if (authError === 'invalid_recovery_link') {
-            setError('Invalid or expired reset link. Please request a new one.')
-          } else if (authError === 'auth_callback_error') {
-            setError('Failed to process authentication. Please try again.')
-          } else if (authError === 'no_code') {
-            setError('Invalid authentication request. Please try again.')
-          }
-        }, [authError])
+  const router = useRouter()
+  const supabase = getSupabaseBrowserClient()
+  
+  useEffect(() => {
+    // Handle messages from URL params
+    if (authError === 'auth_error') {
+      setError('Authentication failed. Please try again.')
+    } else if (authError === 'invalid_recovery_link') {
+      setError('Invalid or expired reset link. Please request a new one.')
+    } else if (authError === 'auth_callback_error') {
+      setError('Failed to process authentication. Please try again.')
+    } else if (authError === 'no_code') {
+      setError('Invalid authentication request. Please try again.')
+    }
+  }, [authError])
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Check if user has password when email changes
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!email || !email.includes('@')) {
+        setShowPassword(false)
+        setUserExists(null)
+        setMagicLinkSent(false)
+        return
+      }
+      
+      // Reset magic link sent state when email changes
+      setMagicLinkSent(false)
+      
+      setCheckingUser(true)
+      try {
+        const response = await fetch('/api/auth/check-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        })
+        
+        const data = await response.json()
+        setUserExists(data.exists)
+        setShowPassword(data.hasPassword)
+      } catch (err) {
+        console.error('Error checking user:', err)
+        // Default to showing password field on error
+        setShowPassword(true)
+        setUserExists(true)
+      } finally {
+        setCheckingUser(false)
+      }
+    }
+    
+    const timer = setTimeout(checkUser, 500)
+    return () => clearTimeout(timer)
+  }, [email])
+
+  async function handlePasswordLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-
-    console.log('🎯 Form submitted!')
-    console.log('📧 Email:', email)
-    console.log('🔑 Password provided:', password ? 'Yes' : 'No')
-
     try {
-      console.log('📡 Sending login request...')
       const response = await fetch('/api/supabase-login', {
         method: 'POST',
         headers: {
@@ -58,25 +96,59 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
         }),
       })
 
-      console.log('📨 Response status:', response.status)
       const data = await response.json()
-      console.log('📦 Response data:', data)
       
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
 
       if (data.success) {
-        console.log('✅ Login successful! Redirecting...')
-        // Don't set loading to false - keep spinner showing during redirect
         window.location.href = `https://diamondplusportal.com${data.redirectTo || redirectTo}`
       } else {
-        throw new Error('Login failed - no success flag')
+        throw new Error('Login failed')
       }
     } catch (error: any) {
-      console.error('❌ Login error:', error)
       setError(error.message || "Invalid email or password")
       setIsLoading(false)
+    }
+  }
+
+  async function handleMagicLink() {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
+          shouldCreateUser: false // Don't create new users
+        }
+      })
+
+      if (error) throw error
+
+      // Magic link sent successfully
+      setMagicLinkSent(true)
+      setIsLoading(false)
+    } catch (error: any) {
+      setError(error.message || "Failed to send magic link")
+      setIsLoading(false)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    
+    if (!userExists) {
+      setError("No account found with this email address")
+      return
+    }
+    
+    if (showPassword) {
+      handlePasswordLogin(e)
+    } else {
+      handleMagicLink()
     }
   }
 
@@ -88,9 +160,9 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
           {error}
         </div>
       )}
-      {message === 'password_reset' && (
+      {(message === 'password_reset_success' || message === 'password_updated') && (
         <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
-          Password reset successful! Please log in with your new password.
+          Password updated successfully! Please log in with your new password.
         </div>
       )}
       {message === 'password_set' && (
@@ -112,6 +184,8 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
           id="email"
           name="email"
           type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
           required
           className="input-field"
@@ -119,50 +193,88 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
         />
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
-        </label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="input-field"
-          placeholder="••••••••"
-        />
-      </div>
+      {checkingUser && (
+        <div className="flex items-center justify-center py-2">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+        </div>
+      )}
 
-      <div className="flex items-center justify-between">
-        <a 
-          href="https://zerotodiamond.com" 
-          className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)]"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Interested in Joining?
-        </a>
-        <Link
-          href="/forgot-password"
-          className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)]"
-        >
-          Forgot password?
-        </Link>
-      </div>
+      {!checkingUser && showPassword && userExists && (
+        <div className="space-y-2">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+            className="input-field"
+            placeholder="••••••••"
+          />
+        </div>
+      )}
+
+      {!checkingUser && !showPassword && userExists && email && (
+        <div className="text-center py-2">
+          <p className="text-sm text-gray-600">
+            We'll send you a magic link to sign in
+          </p>
+        </div>
+      )}
+
+      {!checkingUser && userExists === false && email && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm">
+          No account found with this email address
+        </div>
+      )}
+
+      {showPassword && (
+        <div className="flex items-center justify-between">
+          <a 
+            href="https://zerotodiamond.com" 
+            className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Interested in Joining?
+          </a>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)]"
+          >
+            Forgot password?
+          </Link>
+        </div>
+      )}
 
       <Button
         type="submit"
         className="btn-primary w-full"
-        disabled={isLoading}
+        disabled={isLoading || checkingUser || !email || (userExists === false) || magicLinkSent}
       >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            {showPassword ? 'Signing in...' : 'Sending magic link...'}
+          </>
+        ) : magicLinkSent ? (
+          <>
+            <Check className="mr-2 h-4 w-4" />
+            Check your email
           </>
         ) : (
-          'Sign in'
+          <>
+            {showPassword ? 'Sign in' : (
+              <>
+                <Mail className="mr-2 h-4 w-4" />
+                Send Magic Link
+              </>
+            )}
+          </>
         )}
       </Button>
     </form>

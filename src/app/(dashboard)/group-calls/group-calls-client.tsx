@@ -131,13 +131,28 @@ export default function GroupCallsClient({ recentCalls }: GroupCallsClientProps)
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Group Coaching Call
-              <span className="text-[#176FFF] block">Replays</span>
+              Group Calls and Replays
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
               Access our complete library of group coaching sessions. Learn from expert-led discussions, 
               Q&A sessions, and strategic workshops designed to accelerate your growth.
             </p>
+            
+            {/* Weekly Call Info */}
+            <div className="bg-[#176FFF] text-white p-6 rounded-lg max-w-2xl mx-auto mb-8">
+              <p className="text-lg font-semibold mb-3">
+                The calls are every Monday, 1:00 to 3:00 Eastern.
+              </p>
+              <a 
+                href="https://us02web.zoom.us/j/86016843275?pwd=JYZHQSMTSj2FysBwGOu9ftjuaagNpB.1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-[#176FFF] px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Click here to join every week
+                <ChevronRight className="w-4 h-4" />
+              </a>
+            </div>
           </motion.div>
         </div>
       </section>

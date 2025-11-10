@@ -137,12 +137,17 @@ export class GoHighLevelService {
 
       const contacts = response.data.contacts || []
       
-      // Find exact email match
-      const contact = contacts.find((c: GHLContact) => c.email === email)
+      // Find exact email match (case-insensitive)
+      const normalizedSearchEmail = email.toLowerCase().trim()
+      const contact = contacts.find((c: GHLContact) => {
+        const contactEmail = (c.email || '').toLowerCase().trim()
+        return contactEmail === normalizedSearchEmail
+      })
       
       if (contact) {
         console.log(`[GHL] Found exact match for ${email}:`, {
           id: contact.id,
+          email: contact.email,
           tags: contact.tags?.length || 0
         })
         
@@ -155,7 +160,10 @@ export class GoHighLevelService {
           tags: contact.tags || [],
         }
       } else {
-        console.log(`[GHL] No exact match found for ${email}`)
+        console.log(`[GHL] No exact match found for ${email} (searched ${contacts.length} contacts)`)
+        if (contacts.length > 0) {
+          console.log(`[GHL] Sample emails from search results:`, contacts.slice(0, 3).map((c: any) => c.email))
+        }
         return null
       }
     } catch (error) {

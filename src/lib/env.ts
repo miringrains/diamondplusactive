@@ -17,12 +17,17 @@ export const env = {
   GHL_LOCATION_ID: process.env.GHL_LOCATION_ID!,
   GHL_WEBHOOK_SECRET: process.env.GHL_WEBHOOK_SECRET || '',
   
-  // Email
-  SMTP_HOST: process.env.SMTP_HOST!,
+  // Email (Mailgun)
+  MAILGUN_API_KEY: process.env.MAILGUN_API_KEY || '',
+  MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN || '',
+  MAILGUN_FROM: process.env.MAILGUN_FROM || '',
+  
+  // Email (SMTP - legacy, kept for compatibility)
+  SMTP_HOST: process.env.SMTP_HOST || '',
   SMTP_PORT: parseInt(process.env.SMTP_PORT || '587'),
-  SMTP_USER: process.env.SMTP_USER!,
-  SMTP_PASS: process.env.SMTP_PASS!,
-  SMTP_FROM: process.env.SMTP_FROM!,
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM: process.env.SMTP_FROM || '',
   
   // Storage
   VIDEO_STORAGE_PATH: process.env.VIDEO_STORAGE_PATH || '/public/videos',

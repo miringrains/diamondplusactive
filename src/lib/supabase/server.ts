@@ -1,8 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './database.types'
+import { getSupabaseCookieOptions } from './cookie-config'
 
-export async function createSupabaseServerClient() {
+export async function createSupabaseServerClient(req?: Request) {
   const cookieStore = await cookies()
   
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -10,6 +11,9 @@ export async function createSupabaseServerClient() {
   
   if (!url) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
   if (!anonKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
+  
+  // Get consistent cookie options
+  const defaultCookieOptions = getSupabaseCookieOptions(req)
 
   return createServerClient<Database>(
     url,
@@ -21,9 +25,14 @@ export async function createSupabaseServerClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Merge with our default options to ensure consistency
+              const mergedOptions = {
+                ...defaultCookieOptions,
+                ...options,
+              }
+              cookieStore.set(name, value, mergedOptions)
+            })
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
@@ -33,7 +42,6 @@ export async function createSupabaseServerClient() {
       },
       auth: {
         autoRefreshToken: true,
-        detectSessionInUrl: false,  // Server-side doesn't need URL detection
         persistSession: true
       }
     }

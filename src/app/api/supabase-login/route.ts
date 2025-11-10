@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@/lib/supabase/database.types'
+import { getSupabaseCookieOptions } from '@/lib/supabase/cookie-config'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, redirectTo = '/dashboard' } = await request.json()
+    const body = await request.text()
+    if (!body) {
+      return NextResponse.json(
+        { error: 'Request body is required' },
+        { status: 400 }
+      )
+    }
+    
+    const { email, password, redirectTo = '/dashboard' } = JSON.parse(body)
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,7 +28,10 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
     
-    // Create Supabase client with response-based cookie handling
+    // Get consistent cookie options
+    const defaultCookieOptions = getSupabaseCookieOptions(request)
+    
+    // Create Supabase client with proper cookie handling
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,12 +42,12 @@ export async function POST(request: NextRequest) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              request.cookies.getAll().forEach(cookie => {
-                if (cookie.name.startsWith('sb-')) {
-                  response.cookies.delete(cookie.name)
-                }
-              })
-              response.cookies.set(name, value, options as any)
+              // Merge with our default options to ensure consistency
+              const mergedOptions = {
+                ...defaultCookieOptions,
+                ...options,
+              }
+              response.cookies.set(name, value, mergedOptions as any)
             })
           },
         },
@@ -58,7 +70,6 @@ export async function POST(request: NextRequest) {
     // Return the response with cookies set
     return response
   } catch (error) {
-    console.error('Login error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

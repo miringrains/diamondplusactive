@@ -126,6 +126,12 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                       <span>My Account</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/help" className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Support</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="flex items-center text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />

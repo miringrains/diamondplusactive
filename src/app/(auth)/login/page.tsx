@@ -5,13 +5,14 @@ import Link from "next/link"
 // Force dynamic rendering to handle auth parameters
 export const dynamic = 'force-dynamic'
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const message = searchParams?.message as string
-  const error = searchParams?.error as string
+  const params = await searchParams
+  const message = params?.message as string
+  const error = params?.error as string
   
   return (
     <div className="flex min-h-screen">
@@ -42,8 +43,7 @@ export default function LoginPage({
       </div>
 
       {/* Right side - Video Only */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
-        {/* Background Video */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <video
           autoPlay
           loop

@@ -5,7 +5,10 @@ export default async function GroupCallsPage() {
   // Fetch group calls from database
   const groupCalls = await prisma.group_calls.findMany({
     where: {
-      published: true
+      published: true,
+      mux_playback_id: {
+        not: null
+      }
     },
     orderBy: {
       call_date: 'desc'

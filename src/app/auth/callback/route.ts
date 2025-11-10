@@ -1,63 +1,87 @@
 import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import type { Database } from '@/lib/supabase/database.types'
+import { getSupabaseCookieOptions } from '@/lib/supabase/cookie-config'
 
-// This route handles PKCE codes from password reset emails
-// Supabase is generating PKCE codes instead of OTP tokens
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') || '/reset-password'
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
+  const next = searchParams.get('next')
   
-  console.log('[callback] Processing PKCE code:', { 
-    has_code: !!code,
-    code_prefix: code?.substring(0, 10),
-    next 
-  })
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'
   
-  const baseUrl = process.env.NEXT_PUBLIC_APP_ORIGIN || 'https://diamondplusportal.com'
-  
-  if (!code) {
-    return NextResponse.redirect(new URL('/login?error=no_code', baseUrl))
+  // Disable PKCE recovery flow - only OTP (token_hash) is supported
+  if (type === 'recovery') {
+    console.warn('[Auth Callback] Recovery flow should use /auth/confirm with token_hash, not callback')
+    return NextResponse.redirect(new URL('/forgot-password?error=use_reset_link', baseUrl))
   }
   
-  const cookieStore = await cookies()
-  
-  // Create Supabase client with cookie handling
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
+  // Handle OTP flow with token_hash (magic links sometimes use this format)
+  if (tokenHash && type) {
+    console.log('[Auth Callback] Processing OTP token:', { tokenHash: tokenHash.substring(0, 20) + '...', type })
+    
+    const defaultCookieOptions = getSupabaseCookieOptions(request)
+    const response = NextResponse.redirect(new URL(next || '/dashboard', baseUrl))
+    
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const mergedOptions = {
+                ...defaultCookieOptions,
+                ...options,
+              }
+              response.cookies.set(name, value, mergedOptions)
+            })
+          }
+        }
+      }
+    )
+    
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type as any
+    })
+    
+    if (error) {
+      console.error('[Auth Callback] OTP verification failed:', error.message)
+      return NextResponse.redirect(new URL('/login?error=invalid_token', baseUrl))
     }
-  )
-  
-  // Exchange the PKCE code for a session
-  console.log('[callback] Exchanging PKCE code for session...')
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-  
-  if (error) {
-    console.error('[callback] Failed to exchange code:', error)
-    return NextResponse.redirect(new URL('/login?error=invalid_recovery_link', baseUrl))
+    
+    return response
   }
   
-  console.log('[callback] Code exchanged successfully, user:', data.user?.email)
-  
-  // For password reset flow, always redirect to reset-password
-  if (next === '/reset-password') {
-    return NextResponse.redirect(new URL('/reset-password', baseUrl))
+  // Handle PKCE flow with code exchange (for normal login)
+  if (code) {
+    try {
+      const supabase = await createSupabaseServerClient()
+      
+      // Exchange the code for a session
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      
+      if (!error) {
+        // Redirect to dashboard or next URL
+        return NextResponse.redirect(new URL(next || '/dashboard', baseUrl))
+      }
+      
+      console.error('[Auth Callback] Code exchange failed:', error.message)
+      // If exchange failed, redirect to login with error
+      return NextResponse.redirect(new URL('/login?error=auth_callback_error', baseUrl))
+    } catch (error: any) {
+      console.error('[Auth Callback] Code exchange error:', error.message)
+      return NextResponse.redirect(new URL('/login?error=auth_callback_error', baseUrl))
+    }
   }
   
-  return NextResponse.redirect(new URL(next, baseUrl))
+  // No valid parameters found
+  console.warn('[Auth Callback] No valid code or token_hash found in callback URL')
+  return NextResponse.redirect(new URL('/login?error=invalid_callback', baseUrl))
 }

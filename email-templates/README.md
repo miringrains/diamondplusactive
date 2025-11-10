@@ -1,106 +1,116 @@
-# Diamond Plus Email Templates
+# Diamond District Course Platform
 
-## 📧 What's Included
+A minimal, secure web application for delivering video-based courses with user authentication, progress tracking, and admin management.
 
-### 1. **Email Templates** (`SUPABASE_EMAIL_TEMPLATES.md`)
-All 6 Supabase authentication email templates:
-- ✅ Confirm Signup
-- ✅ Invite User  
-- ✅ Magic Link
-- ✅ Change Email Address
-- ✅ Reset Password
-- ✅ Reauthentication
+## Features
 
-### 2. **Setup Guide** (`SUPABASE_EMAIL_SETUP_GUIDE.md`)
-Step-by-step instructions for:
-- Uploading logo
-- Configuring Supabase
-- Setting up custom SMTP
-- Testing emails
+- 🔐 **User Authentication** - Email/password registration and login with NextAuth.js
+- 🎥 **Video Lessons** - Secure video streaming with player controls
+- 📊 **Progress Tracking** - Track lesson completion and resume where you left off
+- 👨‍💼 **Admin Interface** - Manage courses and lessons (in development)
+- 🔗 **GoHighLevel Integration** - Automatic contact creation and tagging
+- 🎨 **Modern UI** - Built with Tailwind CSS and shadcn/ui components
 
-### 3. **Preview Tool** (`preview-templates.html`)
-- Local preview of all templates
-- Side-by-side light/dark mode view
-- Quick testing before deployment
+## Tech Stack
 
-### 4. **Logo Preparation** (`scripts/prepare-email-logo.sh`)
-Script to convert your SVG logo to email-friendly formats
+- **Framework**: Next.js 14 (App Router) with TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js v5
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Video Player**: Plyr (ready to integrate)
+- **File Upload**: Local storage (Uploadthing ready)
+- **Form Handling**: React Hook Form + Zod
 
-## 🎨 Design Features
+## Prerequisites
 
-### Gmail Dark Mode Compatibility
-- Uses `color-scheme` meta tags
-- CSS media queries for dark mode
-- Tested color combinations
-- No inverted colors issue
+- Node.js 20.x or higher
+- PostgreSQL database
+- GoHighLevel API credentials (optional)
 
-### Brand Colors
-- **Primary Blue**: #0f293d (from your logo)
-- **Accent Cyan**: #00dbff (from your logo)
-- **Clean, professional design**
+## Quick Start
 
-### Best Practices
-- Table-based layout (email standard)
-- Inline CSS for compatibility
-- System fonts for consistency
-- Mobile responsive
-- Accessible markup
-
-## 🚀 Quick Start
-
-1. **Prepare Logo**:
+1. **Clone and install dependencies**:
    ```bash
-   cd /root/diamond-plus/core
-   ./scripts/prepare-email-logo.sh
+   cd diamond-district
+   npm install
    ```
 
-2. **Upload Logo**:
-   - Upload generated PNGs to your server
-   - Update template URLs to point to hosted logo
+2. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` with your database and API credentials.
 
-3. **Configure Supabase**:
-   - Go to Authentication → Email Templates
-   - Copy each template HTML
-   - Paste into corresponding Supabase template
-   - Save
+3. **Set up the database**:
+   ```bash
+   npx prisma migrate dev --name init
+   npx prisma generate
+   ```
 
-4. **Test**:
-   - Send test emails
-   - Check Gmail light/dark mode
-   - Verify mobile rendering
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
 
-## 📝 Template Variables
+5. **Open** [http://165.227.78.164:3000](http://165.227.78.164:3000)
 
-Supabase will replace these automatically:
-- `{{ .ConfirmationURL }}` - Action link
-- `{{ .Email }}` - User's email
-- `{{ .NewEmail }}` - New email (for changes)
+## Project Structure
 
-## 🔧 Customization
+```
+src/
+├── app/                  # Next.js app router pages
+│   ├── (auth)/          # Authentication pages
+│   ├── (dashboard)/     # Protected dashboard pages
+│   ├── admin/           # Admin-only pages
+│   └── api/             # API routes
+├── components/          # Reusable React components
+├── lib/                 # Utility functions and configs
+│   ├── auth.ts         # NextAuth configuration
+│   ├── db.ts           # Prisma client
+│   └── gohighlevel.ts  # GoHighLevel API service
+└── middleware.ts        # Authentication middleware
+```
 
-To modify templates:
-1. Edit HTML in `SUPABASE_EMAIL_TEMPLATES.md`
-2. Test with `preview-templates.html`
-3. Update in Supabase dashboard
+## Environment Variables
 
-## 📱 Testing Checklist
+See `.env.example` for all required environment variables:
+- Database connection string
+- NextAuth configuration
+- GoHighLevel API credentials
+- Email SMTP settings (optional)
 
-- [ ] Logo displays correctly
-- [ ] Links work properly
-- [ ] Gmail dark mode looks good
-- [ ] Mobile rendering is responsive
-- [ ] Text is readable in all modes
-- [ ] Buttons are clickable
-- [ ] Footer information is correct
+## Security Features
 
-## 🆘 Support
+- Password hashing with bcrypt
+- JWT-based session management
+- CSRF protection
+- Protected API routes
+- Video access control
+- Input validation with Zod
 
-If emails aren't working:
-1. Check spam folder
-2. Verify SMTP settings
-3. Test with [Mail Tester](https://www.mail-tester.com)
-4. Check Supabase logs
+## Development Status
 
----
+✅ **Completed**:
+- User authentication system
+- GoHighLevel integration
+- Protected video serving
+- Basic dashboard
+- Database schema
 
-**Remember**: Always test email templates before going live!
+🚧 **In Progress**:
+- Course and lesson pages
+- Video player integration
+- Admin interface
+
+## Production Deployment
+
+For production deployment, consider:
+- Using a managed PostgreSQL database
+- Moving video storage to S3 or CDN
+- Setting up proper SSL certificates
+- Configuring email verification
+- Adding monitoring and error tracking
+
+## License
+
+Private project - All rights reserved

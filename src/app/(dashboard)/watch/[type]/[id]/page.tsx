@@ -20,6 +20,7 @@ async function getVideoContent(type: string, id: string) {
         mux_playback_id: {
           not: null,
         },
+        published: true,
       },
       orderBy: {
         call_date: 'desc',
@@ -69,6 +70,7 @@ async function getVideoContent(type: string, id: string) {
         mux_playback_id: {
           not: null,
         },
+        published: true,
       },
       orderBy: {
         order: 'asc',
@@ -168,7 +170,15 @@ async function getVideoContent(type: string, id: string) {
         mux_playback_id: 's1owStS37QXJ02jgP3PVe7v69jgt012jWIz7ON7Kot01cM',
         duration: 434, // 7:14
         thumbnail_url: null
+      },
+      {
+        id: '2',
+        title: 'Simplify Your Business',
+        mux_playback_id: 's7Iqqf8uwbWK3hBoDHB18X1bLCU6hzn8EWX02JsYfbww',
+        duration: 703, // 11:43
+        thumbnail_url: null
       }
+      // Note: Videos 3-5 are placeholders and only shown on dashboard, not in playlist
     ]
 
     const currentIndex = welcomeVideos.findIndex(video => video.id === id)

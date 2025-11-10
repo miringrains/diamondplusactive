@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import MuxPlayer from '@mux/mux-player-react'
 
 interface SimpleMuxPlayerEnhancedProps {
@@ -22,12 +22,15 @@ export function SimpleMuxPlayerEnhanced({
 }: SimpleMuxPlayerEnhancedProps) {
   const [tokens, setTokens] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(requiresToken)
+  const [tokenLoading, setTokenLoading] = useState(requiresToken)
+  const [playerKey, setPlayerKey] = useState(0)
+  const retryCountRef = useRef(0)
+  const playerRef = useRef<any>(null)
 
   useEffect(() => {
     // Only fetch tokens if required
     if (!requiresToken) {
-      setLoading(false)
+      setTokenLoading(false)
       return
     }
 
@@ -56,59 +59,229 @@ export function SimpleMuxPlayerEnhanced({
           // For endpoints that return tokens directly
           setTokens(data)
         }
-        setLoading(false)
+        setTokenLoading(false)
       } catch (err: any) {
-        console.error('[SimpleMuxPlayerEnhanced] Error:', err)
-        setError(err.message)
-        setLoading(false)
+        console.error('[SimpleMuxPlayerEnhanced] Token fetch error:', err)
+        setError('token-fetch')
+        setTokenLoading(false)
       }
     }
 
     fetchTokens()
   }, [playbackId, requiresToken, videoType, videoId])
 
-  if (error) {
+  // Error handler with retry logic
+  const handleError = (event: any) => {
+    const errorDetail = event?.detail?.error || event?.error || event
+    const errorMessage = errorDetail?.message || event?.detail?.message || ''
+    
+    console.error('[SimpleMuxPlayerEnhanced] Playback error:', {
+      message: errorMessage,
+      code: errorDetail?.code,
+      detail: errorDetail,
+      retryCount: retryCountRef.current
+    })
+
+    // PIPELINE_ERROR_DECODE - Browser codec or network segment issue
+    if (errorMessage.includes('PIPELINE_ERROR_DECODE') || 
+        errorMessage.includes('decode error') ||
+        errorMessage.includes('decode')) {
+      
+      if (retryCountRef.current < 3) {
+        console.log(`[SimpleMuxPlayerEnhanced] Decode error, retry ${retryCountRef.current + 1}/3`)
+        retryCountRef.current++
+        
+        // Force remount with exponential backoff
+        setTimeout(() => {
+          setPlayerKey(prev => prev + 1)
+        }, Math.pow(2, retryCountRef.current - 1) * 1000)
+        
+        return
+      }
+      
+      // After 3 retries, show user-friendly error
+      console.error('[SimpleMuxPlayerEnhanced] Decode error after 3 retries')
+      setError('playback-decode')
+      return
+    }
+
+    // Network errors (MEDIA_ERR_NETWORK = 2, HLS segment failures)
+    if (errorDetail?.code === 2 || 
+        errorDetail?.code === 'NETWORK_ERROR' ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('Network')) {
+      
+      if (retryCountRef.current < 3) {
+        console.log(`[SimpleMuxPlayerEnhanced] Network error, retry ${retryCountRef.current + 1}/3`)
+        retryCountRef.current++
+        
+        // Wait then reload player
+        setTimeout(() => {
+          setPlayerKey(prev => prev + 1)
+        }, 2000 * retryCountRef.current)
+        
+        return
+      }
+      
+      console.error('[SimpleMuxPlayerEnhanced] Network error after 3 retries')
+      setError('network-error')
+      return
+    }
+
+    // Generic error
+    console.error('[SimpleMuxPlayerEnhanced] Unhandled error:', errorMessage)
+    setError('playback-error')
+  }
+
+  // Reset retry count on successful play
+  const handlePlay = () => {
+    if (retryCountRef.current > 0) {
+      console.log('[SimpleMuxPlayerEnhanced] Playback successful, resetting retry count')
+      retryCountRef.current = 0
+    }
+  }
+
+  // Handle manual retry
+  const handleRetry = () => {
+    console.log('[SimpleMuxPlayerEnhanced] Manual retry triggered')
+    retryCountRef.current = 0
+    setError(null)
+    setPlayerKey(prev => prev + 1)
+    
+    // Refetch tokens if needed
+    if (requiresToken) {
+      setTokenLoading(true)
+      setTokens(null)
+    }
+  }
+
+  // Error UI
+  if (error === 'playback-decode') {
     return (
-      <div className={`${className} bg-black rounded-lg flex items-center justify-center`}>
-        <div className="text-red-500 text-center p-8">
-          <p className="font-semibold">Unable to load video</p>
-          <p className="text-sm mt-2">{error}</p>
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="text-center text-white space-y-4 max-w-md">
+            <div className="text-4xl mb-2">⚠️</div>
+            <p className="font-semibold text-lg">Video Playback Issue</p>
+            <p className="text-sm text-white/80">
+              Your browser is having trouble decoding this video. This can happen due to network conditions or browser compatibility.
+            </p>
+            <button 
+              onClick={handleRetry}
+              className="mt-4 px-6 py-2 bg-[#176FFF] hover:bg-[#176FFF]/90 text-white rounded-lg font-medium transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (loading) {
+  if (error === 'network-error') {
     return (
-      <div className={`${className} bg-black rounded-lg flex items-center justify-center`}>
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading secure video...</p>
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="text-center text-white space-y-4 max-w-md">
+            <div className="text-4xl mb-2">📡</div>
+            <p className="font-semibold text-lg">Connection Issue</p>
+            <p className="text-sm text-white/80">
+              Unable to load video segments. Please check your internet connection.
+            </p>
+            <button 
+              onClick={handleRetry}
+              className="mt-4 px-6 py-2 bg-[#176FFF] hover:bg-[#176FFF]/90 text-white rounded-lg font-medium transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
+  if (error === 'token-fetch') {
+    return (
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="text-center text-white space-y-4 max-w-md">
+            <p className="font-semibold text-lg">Unable to Load Video</p>
+            <p className="text-sm text-white/80">
+              Could not fetch video authorization. Please refresh the page.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-[#176FFF] hover:bg-[#176FFF]/90 text-white rounded-lg font-medium transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error === 'playback-error') {
+    return (
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="text-center text-white space-y-4 max-w-md">
+            <p className="font-semibold text-lg">Playback Error</p>
+            <p className="text-sm text-white/80">
+              An error occurred during video playback.
+            </p>
+            <button 
+              onClick={handleRetry}
+              className="mt-4 px-6 py-2 bg-[#176FFF] hover:bg-[#176FFF]/90 text-white rounded-lg font-medium transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Main player with aspect ratio wrapper
   return (
-    <MuxPlayer
-      playbackId={playbackId}
-      tokens={requiresToken ? tokens : undefined}
-      streamType="on-demand"
-      className={className}
-      onEnded={onEnded}
-      theme="minimal"
-      primaryColor="#FFFFFF"
-      secondaryColor="#000000"
-      accentColor="#176FFF"
-      style={{
-        '--media-control-background': 'rgba(0, 0, 0, 0.7)',
-        '--media-control-hover-background': 'rgba(0, 0, 0, 0.8)',
-        '--media-range-track-background': 'rgba(255, 255, 255, 0.3)',
-        '--media-range-track-progress-background': '#176FFF',
-        '--media-range-thumb-background': '#FFFFFF',
-        '--media-time-buffered-color': 'rgba(255, 255, 255, 0.4)',
-        '--media-font-family': 'system-ui, -apple-system, sans-serif'
-      } as any}
-    />
+    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+      {/* Show loading state while tokens are fetching - DON'T render player yet */}
+      {tokenLoading ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <div className="text-white text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
+            <p className="text-sm">Loading secure video...</p>
+          </div>
+        </div>
+      ) : (
+        /* Mux Player - only render when tokens are ready or not required */
+        <MuxPlayer
+          key={`${playbackId}-${playerKey}`}
+          ref={playerRef}
+          playbackId={playbackId}
+          tokens={requiresToken && tokens ? tokens : undefined}
+          streamType="on-demand"
+          preload="metadata"
+          className="w-full h-full"
+          onEnded={onEnded}
+          onError={handleError}
+          onPlay={handlePlay}
+          theme="minimal"
+          primaryColor="#FFFFFF"
+          secondaryColor="#000000"
+          accentColor="#176FFF"
+          playsInline
+          style={{
+            '--media-control-background': 'rgba(0, 0, 0, 0.7)',
+            '--media-control-hover-background': 'rgba(0, 0, 0, 0.8)',
+            '--media-range-track-background': 'rgba(255, 255, 255, 0.3)',
+            '--media-range-track-progress-background': '#176FFF',
+            '--media-range-thumb-background': '#FFFFFF',
+            '--media-time-buffered-color': 'rgba(255, 255, 255, 0.4)',
+            '--media-font-family': 'system-ui, -apple-system, sans-serif'
+          } as any}
+        />
+      )}
+    </div>
   )
 }

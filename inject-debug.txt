@@ -1,5 +1,0 @@
-// Copy and paste this into your browser console:
-
-const script = document.createElement('script');
-script.src = '/login-debug.js?t=' + Date.now();
-document.head.appendChild(script);

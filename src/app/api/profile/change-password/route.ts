@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const { currentPassword, newPassword } = await request.json()
+    const { newPassword } = await request.json()
     
-    if (!currentPassword || !newPassword) {
+    if (!newPassword) {
       return NextResponse.json(
-        { error: 'Current password and new password are required' },
+        { error: 'New password is required' },
         { status: 400 }
       )
     }
     
     const supabase = await createSupabaseServerClient()
     
-    // Get the current user
+    // Get the current user - if they're logged in, that's authentication enough
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
@@ -24,20 +25,10 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // First, verify the current password by attempting to sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email!,
-      password: currentPassword
-    })
+    // Since the user is already authenticated (they're in their account settings),
+    // we don't need to verify their current password
     
-    if (signInError) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 400 }
-      )
-    }
-    
-    // Update the password
+    // Update the password directly
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     })
@@ -49,6 +40,20 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    
+    // Clear the needs_password_set flag using service role
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      user_metadata: { 
+        ...user.user_metadata,
+        needs_password_set: false,
+        has_password: true
+      }
+    })
     
     return NextResponse.json({ 
       success: true,

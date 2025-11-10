@@ -6,7 +6,10 @@ export default async function ChallengesPage() {
   const challengeVideos = await prisma.challenge_videos.findMany({
     where: {
       challenge_id: 'challenge-9',
-      published: true
+      published: true,
+      mux_playback_id: {
+        not: null
+      }
     },
     orderBy: {
       order_index: 'asc'

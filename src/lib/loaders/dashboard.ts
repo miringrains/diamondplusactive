@@ -164,10 +164,10 @@ export async function getWelcomeVideos(): Promise<WelcomeVideo[]> {
     },
     {
       id: '2',
-      title: 'Coming Soon',
+      title: 'Simplify Your Business',
       description: null,
-      muxPlaybackId: null,
-      duration: null,
+      muxPlaybackId: 's7Iqqf8uwbWK3hBoDHB18X1bLCU6hzn8EWX02JsYfbww',
+      duration: 703, // 11:43
       thumbnailUrl: null,
       order: 2
     },

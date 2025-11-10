@@ -73,7 +73,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       
       // Fetch profile if user is logged in (but skip for recovery sessions)
       // Recovery sessions can't fetch data from other tables
-      if (session?.user && !window.location.pathname.includes('/reset-password')) {
+      if (session?.user) {
         console.log('SupabaseAuthProvider: Fetching profile for user:', session.user.id)
         await fetchProfile(session.user.id)
       }
@@ -91,7 +91,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(session?.user ?? null)
       
       // Skip profile fetch for recovery sessions
-      if (session?.user && !window.location.pathname.includes('/reset-password')) {
+      if (session?.user) {
         await fetchProfile(session.user.id)
       } else if (!session?.user) {
         setProfile(null)

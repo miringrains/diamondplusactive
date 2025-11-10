@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 
 interface MuxThumbnailProps {
   playbackId: string
@@ -55,6 +54,7 @@ export function MuxThumbnail({
           setThumbnailUrl(signedUrl)
         } else {
           // Fallback to public URL anyway
+          const publicUrl = `https://image.mux.com/${playbackId}/thumbnail.png?width=${width}&height=${height}&time=${time}&fit_mode=smartcrop`
           setThumbnailUrl(publicUrl)
         }
       } catch (err) {
@@ -86,7 +86,7 @@ export function MuxThumbnail({
   }
 
   return (
-    <Image
+    <img
       src={thumbnailUrl || ''}
       alt={alt}
       width={width}
@@ -98,6 +98,8 @@ export function MuxThumbnail({
           setThumbnailUrl(fallbackSrc)
         }
       }}
+      loading="lazy"
+      style={{ aspectRatio: `${width}/${height}` }}
     />
   )
 }

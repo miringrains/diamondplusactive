@@ -6,16 +6,17 @@ import { redirect } from 'next/navigation'
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const params = await searchParams
   // Check if already logged in
   const session = await auth()
   if (session?.user) {
     redirect('/dashboard')
   }
 
-  const message = searchParams?.message as string
-  const error = searchParams?.error as string
+  const message = params?.message as string
+  const error = params?.error as string
   
   return (
     <div className="flex h-screen overflow-hidden" data-auth-page>
