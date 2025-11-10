@@ -9,6 +9,7 @@
     "build:verify": "node scripts/verify-video-components.js && next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "test:s3": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/test-s3-connection.ts",
     "migrate:videos": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-videos-to-s3.ts",
     "migrate:mux": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-lessons-to-mux.ts",
