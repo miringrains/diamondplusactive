@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db'
 import GroupCallsClient from './group-calls-client'
 
+// Force dynamic rendering for Vercel (requires database access)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function GroupCallsPage() {
   // Fetch group calls from database
   const groupCalls = await prisma.group_calls.findMany({

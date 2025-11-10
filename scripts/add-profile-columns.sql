@@ -29,3 +29,4 @@ SELECT id, email, full_name, phone, location, bio
 FROM profiles
 LIMIT 3;
 
+

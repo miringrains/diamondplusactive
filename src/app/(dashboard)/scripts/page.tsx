@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db'
 import ScriptsClient from './scripts-client'
 
+// Force dynamic rendering for Vercel (requires database access)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function ScriptsPage() {
   // Fetch script videos from database
   const scriptVideos = await prisma.script_videos.findMany({

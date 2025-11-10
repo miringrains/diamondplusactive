@@ -6,6 +6,10 @@ import { PodcastPlayer } from "@/components/podcast-player"
 import Image from "next/image"
 import Link from "next/link"
 
+// Force dynamic rendering for Vercel (requires database access)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function PodcastsPage() {
   const podcasts = await getRecentPodcasts()
 

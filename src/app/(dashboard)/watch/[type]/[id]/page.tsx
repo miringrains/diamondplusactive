@@ -3,6 +3,10 @@ import { notFound } from 'next/navigation'
 import VideoPlayerWithPlaylist from './video-player-with-playlist'
 import { prisma } from '@/lib/db'
 
+// Force dynamic rendering for Vercel (requires database access)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getVideoContent(type: string, id: string) {
   // Handle group calls
   if (type === 'group-calls') {

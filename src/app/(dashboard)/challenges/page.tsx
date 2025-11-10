@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db'
 import ChallengesClient from './challenges-client'
 
+// Force dynamic rendering for Vercel (requires database access)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function ChallengesPage() {
   // Fetch challenge videos from database
   const challengeVideos = await prisma.challenge_videos.findMany({
