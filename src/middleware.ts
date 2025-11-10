@@ -65,7 +65,11 @@ export async function middleware(req: NextRequest) {
 
   // 4) Authorize protected routes
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL || req.url))
+  if (!user) {
+    // Use request URL to auto-detect domain (works on any deployment)
+    const loginUrl = new URL('/login', req.url)
+    return NextResponse.redirect(loginUrl)
+  }
 
   return res
 }

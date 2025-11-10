@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type')
   const next = searchParams.get('next')
   
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'
+  // Auto-detect base URL from request (works on any deployment)
+  const requestUrl = new URL(request.url)
+  const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
   
   // Disable PKCE recovery flow - only OTP (token_hash) is supported
   if (type === 'recovery') {
