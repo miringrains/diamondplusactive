@@ -1,3 +1,4 @@
+// Dashboard v1 - Updated for Vercel deployment Dec 2025
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
