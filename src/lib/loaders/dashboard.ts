@@ -101,40 +101,29 @@ interface RecentPodcast {
 
 export async function getRecentPodcasts(): Promise<RecentPodcast[]> {
   try {
-    const podcasts = await prisma.dp_content.findMany({
+    // Query dp_podcasts directly for reliability
+    const podcasts = await prisma.dp_podcasts.findMany({
       where: {
-        type: 'podcast',
-        is_published: true
-      },
-      include: {
-        dp_podcasts: {
-          orderBy: {
-            published_at: 'desc'
-          },
-          take: 1
+        published: true,
+        mux_playback_id: {
+          not: null
         }
       },
       orderBy: {
-        created_at: 'desc'
-      },
-      take: 5
+        episode_number: 'desc'
+      }
     })
 
-    return podcasts
-      .filter(content => content.dp_podcasts.length > 0)
-      .map((content) => {
-        const podcast = content.dp_podcasts[0]
-        return {
-          id: podcast.id,
-          title: podcast.title,
-          description: podcast.description || content.description || '',
-          duration: podcast.duration || 0,
-          episodeNumber: podcast.episode_number || 1,
-          publishedAt: podcast.published_at || content.created_at,
-          muxPlaybackId: podcast.mux_playback_id || '',
-          requiresToken: (podcast as any).mux_policy === 'signed'
-        }
-      })
+    return podcasts.map((podcast) => ({
+      id: podcast.id,
+      title: podcast.title,
+      description: podcast.description || '',
+      duration: podcast.duration || 0,
+      episodeNumber: podcast.episode_number || 1,
+      publishedAt: podcast.published_at || podcast.created_at,
+      muxPlaybackId: podcast.mux_playback_id || '',
+      requiresToken: (podcast as any).mux_policy === 'signed'
+    }))
   } catch (error) {
     console.error("Error fetching recent podcasts:", error)
     return []
