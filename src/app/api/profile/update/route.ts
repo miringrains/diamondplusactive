@@ -1,11 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
+// Sanitize text to prevent UTF-8 encoding issues
+function sanitizeText(text: string | null | undefined): string | null {
+  if (!text) return null
+  
+  return text
+    // Replace smart quotes with regular quotes
+    .replace(/[\u2018\u2019]/g, "'")  // Smart single quotes
+    .replace(/[\u201C\u201D]/g, '"')  // Smart double quotes
+    // Replace em/en dashes with regular dash
+    .replace(/[\u2013\u2014]/g, '-')
+    // Replace ellipsis character with three dots
+    .replace(/\u2026/g, '...')
+    // Remove zero-width characters
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // Remove any non-printable characters except newlines/tabs
+    .replace(/[^\x20-\x7E\n\r\t\u00A0-\uFFFF]/g, '')
+    // Normalize Unicode (fixes corrupted encoding)
+    .normalize('NFC')
+    // Trim whitespace
+    .trim()
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { name, phone, location, bio } = await request.json()
     
-    console.log('[Profile Update] Received data:', { name, phone, location, bio })
+    // Sanitize all text inputs
+    const sanitizedName = sanitizeText(name)
+    const sanitizedPhone = sanitizeText(phone)
+    const sanitizedLocation = sanitizeText(location)
+    const sanitizedBio = sanitizeText(bio)
+    
+    console.log('[Profile Update] Received data:', { name: sanitizedName, phone: sanitizedPhone, location: sanitizedLocation, bioLength: sanitizedBio?.length })
     
     const supabase = await createSupabaseServerClient()
     
@@ -25,14 +53,14 @@ export async function POST(request: NextRequest) {
     // Update the user's profile in the profiles table
     // Note: phone, location, bio are now dedicated columns (not in metadata)
     const updateData = {
-      full_name: name,
-      phone: phone || null,
-      location: location || null,
-      bio: bio || null,
+      full_name: sanitizedName,
+      phone: sanitizedPhone,
+      location: sanitizedLocation,
+      bio: sanitizedBio,
       updated_at: new Date().toISOString()
     }
     
-    console.log('[Profile Update] Update data:', updateData)
+    console.log('[Profile Update] Update data (sanitized):', updateData)
     
     const { data: updateResult, error: profileError } = await supabase
       .from('profiles')
@@ -50,13 +78,13 @@ export async function POST(request: NextRequest) {
     
     console.log('[Profile Update] Success! Updated rows:', updateResult)
     
-    // Update the user metadata in auth
+    // Update the user metadata in auth (also sanitized)
     const { error: metadataError } = await supabase.auth.updateUser({
       data: { 
-        full_name: name,
-        phone,
-        location,
-        bio
+        full_name: sanitizedName,
+        phone: sanitizedPhone,
+        location: sanitizedLocation,
+        bio: sanitizedBio
       }
     })
     

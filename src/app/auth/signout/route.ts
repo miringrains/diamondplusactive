@@ -17,9 +17,8 @@ export async function POST(req: NextRequest) {
 
   revalidatePath('/', 'layout')
   
-  // Auto-detect origin from request
-  const requestUrl = new URL(request.url)
-  const origin = `${requestUrl.protocol}//${requestUrl.host}`
+  // Always use production URL for redirects (prevents localhost issues)
+  const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'
   const response = NextResponse.redirect(new URL('/login', origin), {
     status: 302,
   })

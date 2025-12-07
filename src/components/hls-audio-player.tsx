@@ -14,6 +14,15 @@ import {
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
+interface Episode {
+  id: string
+  title: string
+  episodeNumber: number
+  duration: number
+  muxPlaybackId: string
+  description?: string
+}
+
 interface HLSAudioPlayerProps {
   episodeNumber: number
   title: string
@@ -25,6 +34,12 @@ interface HLSAudioPlayerProps {
   podcastLogo?: string
   podcastTitle?: string
   podcastHost?: string
+  // New props for playlist functionality
+  episodes?: Episode[]
+  currentEpisodeIndex?: number
+  onEpisodeChange?: (index: number) => void
+  // Token support for signed audio
+  requiresToken?: boolean
 }
 
 export function HLSAudioPlayer({
@@ -37,7 +52,11 @@ export function HLSAudioPlayer({
   onEnded,
   podcastLogo = "/diamondstandardpod.webp",
   podcastTitle = "Diamond Stories Podcast",
-  podcastHost = "Hosted by Ricky Carruth"
+  podcastHost = "Hosted by Ricky Carruth",
+  episodes,
+  currentEpisodeIndex = 0,
+  onEpisodeChange,
+  requiresToken = false
 }: HLSAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsRef = useRef<Hls | null>(null)
@@ -49,13 +68,49 @@ export function HLSAudioPlayer({
   const [isMuted, setIsMuted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
 
-  // Mux HLS streaming URL
-  const streamUrl = `https://stream.mux.com/${muxPlaybackId}.m3u8`
+  // Fetch token if needed
+  useEffect(() => {
+    if (!requiresToken) return
+
+    async function fetchToken() {
+      try {
+        const response = await fetch('/api/mux/playback-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playbackId: muxPlaybackId })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch playback token')
+        }
+
+        const data = await response.json()
+        setToken(data.tokens?.playback || null)
+      } catch (err) {
+        console.error('[HLSAudioPlayer] Token fetch error:', err)
+        setError('Unable to load secure audio')
+      }
+    }
+
+    fetchToken()
+  }, [muxPlaybackId, requiresToken])
+
+  // Mux HLS streaming URL - with token if required
+  const streamUrl = requiresToken && token
+    ? `https://stream.mux.com/${muxPlaybackId}.m3u8?token=${token}`
+    : `https://stream.mux.com/${muxPlaybackId}.m3u8`
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+
+    // Wait for token if required
+    if (requiresToken && !token) {
+      setIsLoading(true)
+      return
+    }
 
     // Initialize HLS
     if (Hls.isSupported()) {
@@ -146,7 +201,7 @@ export function HLSAudioPlayer({
       audio.removeEventListener('waiting', handleWaiting)
       audio.removeEventListener('playing', handlePlaying)
     }
-  }, [streamUrl, onTimeUpdate, onEnded])
+  }, [streamUrl, onTimeUpdate, onEnded, token, requiresToken])
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -221,9 +276,15 @@ export function HLSAudioPlayer({
   return (
     <div className="w-full max-w-7xl mx-auto">
       <div className="bg-background border border-border rounded-xl overflow-hidden shadow-lg">
-        <div className="grid md:grid-cols-2 gap-0">
+        <div className={cn(
+          "grid gap-0",
+          episodes && episodes.length > 1 ? "md:grid-cols-[2fr_1fr]" : "md:grid-cols-2"
+        )}>
           {/* Left Column - Player */}
-          <div className="p-8 border-r border-border">
+          <div className={cn(
+            "p-8",
+            episodes && episodes.length > 1 ? "border-r border-border" : "border-r border-border"
+          )}>
             <audio ref={audioRef} preload="metadata" />
             
             {/* Podcast Info */}
@@ -333,41 +394,91 @@ export function HLSAudioPlayer({
             </div>
           </div>
 
-          {/* Right Column - Description */}
-          <div className="p-8">
-            <h3 className="text-xl font-semibold text-foreground mb-4">
-              Episode Description
-            </h3>
-            
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              {description}
-            </p>
-
-            <div className="flex items-center justify-between text-sm text-muted-foreground pb-6 border-b border-border">
-              <div>
-                <span>Duration:</span>
-                <span className="ml-2 font-medium text-foreground">
-                  {formatTime(duration)}
-                </span>
-              </div>
-              <div>
-                <span>Episode:</span>
-                <span className="ml-2 font-medium text-foreground">
-                  #{episodeNumber.toString().padStart(2, '0')}
-                </span>
+          {/* Right Column - Playlist or Description */}
+          {episodes && episodes.length > 1 ? (
+            /* Episode Playlist */
+            <div className="p-4 bg-gray-50 max-h-[500px] overflow-y-auto">
+              <h3 className="font-semibold text-sm text-gray-900 mb-3 px-2">Episodes</h3>
+              <div className="space-y-1">
+                {episodes.map((ep, i) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => onEpisodeChange?.(i)}
+                    className={cn(
+                      "w-full text-left p-3 rounded-lg transition-colors",
+                      i === currentEpisodeIndex
+                        ? "bg-[#176FFF] text-white shadow-sm"
+                        : "hover:bg-gray-100 text-gray-900"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold",
+                        i === currentEpisodeIndex
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200 text-gray-600"
+                      )}>
+                        {ep.episodeNumber.toString().padStart(2, '0')}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={cn(
+                          "font-medium text-sm truncate",
+                          i === currentEpisodeIndex ? "text-white" : "text-gray-900"
+                        )}>
+                          {ep.title}
+                        </div>
+                        <div className={cn(
+                          "text-xs mt-0.5",
+                          i === currentEpisodeIndex ? "text-white/80" : "text-gray-500"
+                        )}>
+                          {Math.floor(ep.duration / 60)}:{String(ep.duration % 60).padStart(2, '0')}
+                        </div>
+                      </div>
+                      {i === currentEpisodeIndex && (
+                        <Play className="h-4 w-4 text-white" fill="white" />
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
+          ) : (
+            /* Description Column (when no playlist) */
+            <div className="p-8">
+              <h3 className="text-xl font-semibold text-foreground mb-4">
+                Episode Description
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                {description}
+              </p>
 
-            <div className="mt-6">
-              <Button 
-                variant="default" 
-                className="w-full bg-[#165DFC] hover:bg-[#165DFC]/90 text-white"
-                onClick={() => window.location.href = '/podcasts'}
-              >
-                More Diamond Stories Podcasts
-              </Button>
+              <div className="flex items-center justify-between text-sm text-muted-foreground pb-6 border-b border-border">
+                <div>
+                  <span>Duration:</span>
+                  <span className="ml-2 font-medium text-foreground">
+                    {formatTime(duration)}
+                  </span>
+                </div>
+                <div>
+                  <span>Episode:</span>
+                  <span className="ml-2 font-medium text-foreground">
+                    #{episodeNumber.toString().padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Button 
+                  variant="default" 
+                  className="w-full bg-[#165DFC] hover:bg-[#165DFC]/90 text-white"
+                  onClick={() => window.location.href = '/podcasts'}
+                >
+                  More Diamond Stories Podcasts
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

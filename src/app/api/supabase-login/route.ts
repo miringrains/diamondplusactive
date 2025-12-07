@@ -31,6 +31,14 @@ export async function POST(request: NextRequest) {
     // Get consistent cookie options
     const defaultCookieOptions = getSupabaseCookieOptions(request)
     
+    // Clear any old PKCE or auth cookies that might interfere
+    const existingCookies = request.cookies.getAll()
+    existingCookies.forEach(cookie => {
+      if (cookie.name.includes('sb-') && cookie.name.includes('auth')) {
+        response.cookies.delete(cookie.name)
+      }
+    })
+    
     // Create Supabase client with proper cookie handling
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,9 +77,10 @@ export async function POST(request: NextRequest) {
 
     // Return the response with cookies set
     return response
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Supabase Login] Error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Internal server error' },
       { status: 500 }
     )
   }

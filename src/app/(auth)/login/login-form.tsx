@@ -96,6 +96,13 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
         }),
       })
 
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('[Login] Non-JSON response:', response.status, contentType)
+        throw new Error('Server error - please try again or contact support')
+      }
+
       const data = await response.json()
       
       if (!response.ok) {
@@ -118,10 +125,13 @@ export default function LoginForm({ redirectTo = '/dashboard', message, authErro
     setError(null)
 
     try {
+      // Use environment variable for redirect URL (Supabase best practice)
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
+          emailRedirectTo: `${baseUrl}/auth/callback?next=${redirectTo}`,
           shouldCreateUser: false // Don't create new users
         }
       })

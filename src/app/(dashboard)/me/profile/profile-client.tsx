@@ -412,7 +412,11 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
                   onChange={(e) => setFormData({...formData, bio: e.target.value})}
                   className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                   placeholder="Tell us about yourself and your real estate journey..."
+                  maxLength={1000}
                 />
+                <p className="text-xs text-muted-foreground">
+                  {formData.bio.length}/1000 characters
+                </p>
               </div>
 
               <Button 

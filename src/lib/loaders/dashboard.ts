@@ -131,7 +131,8 @@ export async function getRecentPodcasts(): Promise<RecentPodcast[]> {
           duration: podcast.duration || 0,
           episodeNumber: podcast.episode_number || 1,
           publishedAt: podcast.published_at || content.created_at,
-          muxPlaybackId: podcast.mux_playback_id || ''
+          muxPlaybackId: podcast.mux_playback_id || '',
+          requiresToken: (podcast as any).mux_policy === 'signed'
         }
       })
   } catch (error) {
@@ -173,10 +174,10 @@ export async function getWelcomeVideos(): Promise<WelcomeVideo[]> {
     },
     {
       id: '3',
-      title: 'Coming Soon',
+      title: 'Learn The Business',
       description: null,
-      muxPlaybackId: null,
-      duration: null,
+      muxPlaybackId: 'jAlafTCO201hAfUqfd008kwMPsrlYesHf029TDYUeE97UM',
+      duration: 1055, // 17:35
       thumbnailUrl: null,
       order: 3
     },

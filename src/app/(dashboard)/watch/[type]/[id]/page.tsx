@@ -181,8 +181,15 @@ async function getVideoContent(type: string, id: string) {
         mux_playback_id: 's7Iqqf8uwbWK3hBoDHB18X1bLCU6hzn8EWX02JsYfbww',
         duration: 703, // 11:43
         thumbnail_url: null
+      },
+      {
+        id: '3',
+        title: 'Learn The Business',
+        mux_playback_id: 'jAlafTCO201hAfUqfd008kwMPsrlYesHf029TDYUeE97UM',
+        duration: 1055, // 17:35
+        thumbnail_url: null
       }
-      // Note: Videos 3-5 are placeholders and only shown on dashboard, not in playlist
+      // Note: Videos 4-5 are placeholders and only shown on dashboard, not in playlist
     ]
 
     const currentIndex = welcomeVideos.findIndex(video => video.id === id)

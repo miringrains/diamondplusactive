@@ -10,9 +10,8 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type')
   const next = searchParams.get('next')
   
-  // Auto-detect base URL from request (works on any deployment)
-  const requestUrl = new URL(request.url)
-  const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+  // Always use production URL for redirects (prevents localhost issues)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://diamondplusportal.com'
   
   if (!tokenHash || !type) {
     return NextResponse.redirect(new URL('/login?error=invalid_link', baseUrl))
