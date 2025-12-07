@@ -26,7 +26,7 @@ model accounts {
 }
 
 model challenge_videos {
-  id              String   @id
+  id              String    @id
   challenge_id    String
   title           String
   description     String?
@@ -34,11 +34,11 @@ model challenge_videos {
   mux_asset_id    String?
   thumbnail_url   String?
   duration        Int?
-  order_index     Int      @default(0)
-  mux_policy      String   @default("signed")
-  published       Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime
+  order_index     Int       @default(0)
+  mux_policy      String    @default("signed")
+  published       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @default(now())
 }
 
 model courses {
@@ -64,7 +64,7 @@ model dp_content {
   is_published  Boolean       @default(false)
   metadata      Json          @default("{}")
   created_at    DateTime      @default(now())
-  updated_at    DateTime
+  updated_at    DateTime?     @default(now())
   created_by    String?
   dp_podcasts   dp_podcasts[]
   dp_progress   dp_progress[]
@@ -77,7 +77,7 @@ model dp_content {
 
 model dp_podcasts {
   id              String        @id
-  content_id      String
+  content_id      String?
   title           String
   description     String?
   episode_number  Int?
@@ -89,8 +89,10 @@ model dp_podcasts {
   mux_ready_at    DateTime?
   published_at    DateTime?
   created_at      DateTime      @default(now())
-  updated_at      DateTime
-  dp_content      dp_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  updated_at      DateTime?     @default(now())
+  published       Boolean?      @default(false)
+  mux_policy      String?       @default("public")
+  dp_content      dp_content?   @relation(fields: [content_id], references: [id], onDelete: Cascade)
   dp_progress     dp_progress[]
 
   @@index([content_id])
@@ -107,7 +109,7 @@ model dp_progress {
   total_seconds    Int?
   last_watched_at  DateTime     @default(now())
   created_at       DateTime     @default(now())
-  updated_at       DateTime
+  updated_at       DateTime?    @default(now())
   dp_content       dp_content   @relation(fields: [content_id], references: [id], onDelete: Cascade)
   dp_podcasts      dp_podcasts? @relation(fields: [podcast_id], references: [id], onDelete: Cascade)
   users            users        @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -120,7 +122,7 @@ model dp_progress {
 
 model dp_videos {
   id              String        @id
-  content_id      String
+  content_id      String?
   title           String
   description     String?
   video_url       String?
@@ -133,15 +135,15 @@ model dp_videos {
   mux_ready_at    DateTime?
   mux_error       String?
   created_at      DateTime      @default(now())
-  updated_at      DateTime
+  updated_at      DateTime?     @default(now())
   dp_progress     dp_progress[]
-  dp_content      dp_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  dp_content      dp_content?   @relation(fields: [content_id], references: [id], onDelete: Cascade)
 
   @@index([content_id])
 }
 
 model group_calls {
-  id              String   @id
+  id              String    @id
   title           String
   description     String?
   call_date       DateTime
@@ -150,9 +152,9 @@ model group_calls {
   video_url       String?
   thumbnail_url   String?
   duration        Int?
-  published       Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime
+  published       Boolean?  @default(true)
+  created_at      DateTime? @default(now())
+  updated_at      DateTime? @default(now())
 }
 
 model modules {
@@ -224,7 +226,7 @@ model progress {
 }
 
 model script_videos {
-  id              String   @id
+  id              String    @id
   title           String
   description     String?
   mux_playback_id String?
@@ -233,10 +235,10 @@ model script_videos {
   video_url       String?
   thumbnail_url   String?
   duration        Int?
-  order           Int      @default(0)
-  published       Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime
+  order           Int       @default(0)
+  published       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @default(now())
 }
 
 model sessions {
@@ -300,7 +302,7 @@ model verificationtokens {
 }
 
 model welcome_course_videos {
-  id              String   @id
+  id              String    @id
   title           String
   description     String?
   mux_playback_id String?
@@ -308,10 +310,10 @@ model welcome_course_videos {
   video_url       String?
   thumbnail_url   String?
   duration        Int?
-  order           Int      @default(0)
-  published       Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime
+  order           Int       @default(0)
+  published       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @default(now())
 }
 
 enum ContentType {
