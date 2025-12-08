@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Target, FileText, DollarSign, Users, BookOpen, Home, ChevronRight, ExternalLink } from 'lucide-react'
+import { Target, FileText, DollarSign, Users, BookOpen, Home, ChevronRight, ExternalLink, CalendarDays, Download } from 'lucide-react'
 import { PageHeader } from '@/components/layout'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -133,6 +133,26 @@ export default function ActionPlanPage() {
                   <Link href="/scripts">
                     View Scripts
                   </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* 2026 Business Planning Workshop */}
+            <Card className="bg-background border border-border h-full md:col-span-2">
+              <CardHeader className="pb-4">
+                <div className="p-3 rounded-lg bg-[#E8F0FF] w-fit mb-4">
+                  <CalendarDays className="h-6 w-6 text-[#176FFF]" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900">2026 Business Planning Workshop</CardTitle>
+                <p className="text-sm font-medium text-[#176FFF] mt-1">By Ricky Carruth</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-gray-600 mb-6">Your comprehensive workbook for setting goals, mapping your business, and planning for a breakthrough 2026</p>
+                <Button className="w-full bg-[#176FFF] hover:bg-[#1460E5] text-white" asChild>
+                  <a href="/6936fecc2ec4f565ea958f2f.pdf" target="_blank" rel="noopener noreferrer">
+                    <Download className="mr-2 h-4 w-4" />
+                    Open Workshop PDF
+                  </a>
                 </Button>
               </CardContent>
             </Card>
