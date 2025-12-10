@@ -42,9 +42,10 @@ export async function auth(): Promise<Session | null> {
         name: profile?.full_name || user.email || '',
         role: profile?.role || 'user',
         avatar_url: profile?.avatar_url || null,
-        firstName: (profile?.metadata as any)?.first_name || '',
-        lastName: (profile?.metadata as any)?.last_name || '',
-        phone: (profile?.metadata as any)?.phone || '',
+        // Read from dedicated columns (not metadata)
+        phone: profile?.phone || '',
+        location: profile?.location || '',
+        bio: profile?.bio || '',
         createdAt: user.created_at,
       }
     }

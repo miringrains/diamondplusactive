@@ -38,9 +38,9 @@ export default function ProfileClient({ initialUser }: ProfileClientProps) {
   const [formData, setFormData] = useState({
     name: initialUser.name || "",
     email: initialUser.email || "",
-    phone: "",
-    location: "",
-    bio: ""
+    phone: initialUser.phone || "",
+    location: initialUser.location || "",
+    bio: initialUser.bio || ""
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = getSupabaseBrowserClient()
