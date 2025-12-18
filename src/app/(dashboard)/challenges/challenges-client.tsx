@@ -19,13 +19,14 @@ interface ChallengeVideo {
 }
 
 interface ChallengesClientProps {
+  challenge10Videos: ChallengeVideo[]
   challenge9Videos: ChallengeVideo[]
   challenge8Videos: ChallengeVideo[]
   challenge6Videos: ChallengeVideo[]
 }
 
-export default function ChallengesClient({ challenge9Videos, challenge8Videos, challenge6Videos }: ChallengesClientProps) {
-  const [expandedChallenge, setExpandedChallenge] = useState<string | null>('challenge-9')
+export default function ChallengesClient({ challenge10Videos, challenge9Videos, challenge8Videos, challenge6Videos }: ChallengesClientProps) {
+  const [expandedChallenge, setExpandedChallenge] = useState<string | null>('challenge-10')
 
   // Format duration from seconds to HH:MM:SS format
   const formatDuration = (seconds?: number | null) => {
@@ -80,6 +81,103 @@ export default function ChallengesClient({ challenge9Videos, challenge8Videos, c
         {/* Challenge Videos Section */}
         <section>
           <div className="space-y-6">
+            {/* Challenge 10 Section */}
+            <Card className="card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-[var(--brand)]">
+                      <Award className="h-6 w-6 text-[var(--ink-inverse)]" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-[var(--ink-inverse)]">
+                        Challenge 10: Two Day Content Challenge
+                      </CardTitle>
+                      <CardDescription className="text-[var(--ink-inverse)]/70 mt-1">
+                        How To Close More Deals On Social Media
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setExpandedChallenge(expandedChallenge === 'challenge-10' ? null : 'challenge-10')}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {expandedChallenge === 'challenge-10' ? 'Hide' : 'View'} Replays
+                  </Button>
+                </div>
+              </CardHeader>
+              
+              {expandedChallenge === 'challenge-10' && (
+                <CardContent>
+                  {challenge10Videos.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {challenge10Videos.map((video) => (
+                        <Link
+                          key={video.id}
+                          href={`/watch/challenges/${video.id}`}
+                          className="block"
+                        >
+                          <Card className="card cursor-pointer overflow-hidden pt-0 pb-6 hover:shadow-lg transition-shadow">
+                            <div className="aspect-video bg-[var(--eerie-black)] relative overflow-hidden group">
+                              {video.muxPlaybackId ? (
+                                <div className="absolute inset-0">
+                                  <MuxThumbnail
+                                    playbackId={video.muxPlaybackId}
+                                    alt={video.title}
+                                    width={640}
+                                    height={360}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full bg-[var(--eerie-black)]" />
+                              )}
+                              
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div className="rounded-full bg-white/10 p-5">
+                                  <Play className="h-8 w-8 text-[var(--ink-inverse)] fill-none" />
+                                </div>
+                              </div>
+                              
+                              {video.duration && (
+                                <div className="absolute bottom-2 right-2 bg-black/75 text-white text-xs px-2 py-1 rounded">
+                                  {formatDuration(video.duration)}
+                                </div>
+                              )}
+                              
+                              {video.requiresToken && (
+                                <div className="absolute top-2 right-2 bg-black/75 text-white text-xs px-2 py-1 rounded">
+                                  Private
+                                </div>
+                              )}
+                            </div>
+                            
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg text-[var(--ink-inverse)] line-clamp-2 min-h-[3.5rem]">
+                                {video.title}
+                              </CardTitle>
+                              {video.description && (
+                                <CardDescription className="text-sm text-[var(--ink-inverse)]/80 line-clamp-2">
+                                  {video.description}
+                                </CardDescription>
+                              )}
+                            </CardHeader>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Play className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-muted-foreground">Challenge 10 videos will be available soon.</p>
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+
             {/* Challenge 9 Section */}
             <Card className="card">
               <CardHeader>

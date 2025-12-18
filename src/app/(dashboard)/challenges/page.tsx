@@ -6,6 +6,20 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function ChallengesPage() {
+  // Fetch Challenge 10 videos
+  const challenge10Data = await prisma.challenge_videos.findMany({
+    where: {
+      challenge_id: 'challenge-10',
+      published: true,
+      mux_playback_id: {
+        not: null
+      }
+    },
+    orderBy: {
+      order_index: 'asc'
+    }
+  })
+
   // Fetch Challenge 9 videos
   const challenge9Data = await prisma.challenge_videos.findMany({
     where: {
@@ -48,6 +62,17 @@ export default async function ChallengesPage() {
     }
   })
 
+  // Transform Challenge 10
+  const challenge10Videos = challenge10Data.map((video) => ({
+    id: video.id,
+    title: video.title,
+    description: video.description,
+    muxPlaybackId: video.mux_playback_id,
+    thumbnailUrl: video.thumbnail_url,
+    duration: video.duration,
+    requiresToken: video.mux_policy === 'signed'
+  }))
+
   // Transform Challenge 9
   const challenge9Videos = challenge9Data.map((video) => ({
     id: video.id,
@@ -81,5 +106,5 @@ export default async function ChallengesPage() {
     requiresToken: video.mux_policy === 'signed'
   }))
 
-  return <ChallengesClient challenge9Videos={challenge9Videos} challenge8Videos={challenge8Videos} challenge6Videos={challenge6Videos} />
+  return <ChallengesClient challenge10Videos={challenge10Videos} challenge9Videos={challenge9Videos} challenge8Videos={challenge8Videos} challenge6Videos={challenge6Videos} />
 }
