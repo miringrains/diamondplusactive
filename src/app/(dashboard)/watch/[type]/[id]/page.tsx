@@ -110,6 +110,17 @@ async function getVideoContent(type: string, id: string) {
 
   // Handle challenge videos
   if (type === 'challenges') {
+    // First, find the current video to get its challenge_id
+    const currentVideoLookup = await prisma.challenge_videos.findUnique({
+      where: { id },
+      select: { challenge_id: true, mux_playback_id: true }
+    })
+
+    if (!currentVideoLookup || !currentVideoLookup.mux_playback_id) {
+      return null
+    }
+
+    // Now fetch only videos from the SAME challenge
     const videos = await prisma.challenge_videos.findMany({
       select: {
         id: true,
@@ -123,6 +134,7 @@ async function getVideoContent(type: string, id: string) {
         mux_policy: true,
       },
       where: {
+        challenge_id: currentVideoLookup.challenge_id, // Filter by same challenge
         mux_playback_id: {
           not: null,
         },
@@ -134,14 +146,20 @@ async function getVideoContent(type: string, id: string) {
     })
 
     const currentIndex = videos.findIndex(video => video.id === id)
-    if (currentIndex === -1 || !videos[currentIndex].mux_playback_id) {
+    if (currentIndex === -1) {
       return null
     }
 
     const currentVideo = videos[currentIndex]
-    const challengeTitle = currentVideo.challenge_id === 'challenge-9' 
-      ? 'Challenge 9: Set More Listing Appointments' 
-      : `Challenge: ${currentVideo.challenge_id}`
+    
+    // Human-readable challenge titles
+    const challengeTitles: Record<string, string> = {
+      'challenge-10': 'Challenge 10: Two Day Content Challenge',
+      'challenge-9': 'Challenge 9: Set More Listing Appointments',
+      'challenge-8': 'Challenge 8',
+      'challenge-6': 'Challenge 6',
+    }
+    const challengeTitle = challengeTitles[currentVideo.challenge_id] || `Challenge: ${currentVideo.challenge_id}`
 
     return {
       title: challengeTitle,
