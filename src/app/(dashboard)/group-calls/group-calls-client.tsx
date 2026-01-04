@@ -144,7 +144,7 @@ export default function GroupCallsClient({ recentCalls }: GroupCallsClientProps)
                 The calls are every Monday, 1:00 to 3:00 Eastern.
               </p>
               <a 
-                href="https://us02web.zoom.us/j/89057254778?pwd=ia2wwHe0IeIg4S3f99oRMUglrGbabn.1"
+                href="https://us02web.zoom.us/j/89108447247?pwd=138BZOPiDDbaeYRyRKr2FQtzccLvtu.1"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-white text-[#176FFF] px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors"

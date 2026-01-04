@@ -199,7 +199,7 @@ export default async function DashboardPage() {
                 <p className="text-sm text-gray-600 mb-6">Weekly coaching calls with the community</p>
                 <div className="space-y-3">
                   <Button className="w-full bg-[#176FFF] hover:bg-[#1460E5] text-white" asChild>
-                    <a href="https://us02web.zoom.us/j/89057254778?pwd=ia2wwHe0IeIg4S3f99oRMUglrGbabn.1" target="_blank" rel="noopener noreferrer">
+                    <a href="https://us02web.zoom.us/j/89108447247?pwd=138BZOPiDDbaeYRyRKr2FQtzccLvtu.1" target="_blank" rel="noopener noreferrer">
                       Join Live Session
                     </a>
                   </Button>
