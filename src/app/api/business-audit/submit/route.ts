@@ -42,40 +42,8 @@ export async function POST(request: NextRequest) {
     body.firstName = firstName
     body.lastName = lastName
     
-    // Validate required fields (name/email from session, rest from form)
-    const requiredFields = [
-      'qaAttendance',
-      'accountabilityEmails',
-      'absCount',
-      'closings',
-      'activeListings',
-      'pendingDeals',
-      'grossCommissions',
-      'prospectsAdded',
-      'impossibleGoal',
-      'biggestConstraint',
-      'goal1',
-      'goal2',
-      'programRating',
-      'improvementSuggestions',
-      'additionalNotes',
-      'whatInspiredYou'
-    ]
-
-    for (const field of requiredFields) {
-      if (!body[field] || (typeof body[field] === 'string' && body[field].trim() === '')) {
-        console.error('[Business Audit] ❌ Missing required field:', {
-          field,
-          value: body[field],
-          userId: session.user.id,
-          email: body.email
-        })
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        )
-      }
-    }
+    // No strict validation - allow partial/empty submissions
+    // Empty fields will show as "Not answered" in GoHighLevel note
 
     // Submit to GoHighLevel via API (update fields + create note)
     console.log('[Business Audit] Starting submission to GoHighLevel:', {
