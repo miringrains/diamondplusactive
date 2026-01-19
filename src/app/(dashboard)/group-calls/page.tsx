@@ -16,8 +16,8 @@ export default async function GroupCallsPage() {
     },
     orderBy: {
       call_date: 'desc'
-    },
-    take: 10 // Limit to recent calls
+    }
+    // No limit - show all group calls
   })
 
   // Transform to match expected format
