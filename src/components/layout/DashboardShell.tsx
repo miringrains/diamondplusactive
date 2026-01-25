@@ -79,6 +79,30 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
 
             {/* Action Icons */}
             <div className="flex items-center gap-3">
+              {/* WhatsApp Group Button */}
+              <a 
+                href="https://chat.whatsapp.com/BRYsjuJNcQi44jsm69dsD1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex-shrink-0"
+              >
+                <Image
+                  src="/JOINWHATSAPP.webp"
+                  alt="Join WhatsApp Group"
+                  width={140}
+                  height={40}
+                  className="h-9 w-auto hidden sm:block hover:opacity-90 transition-opacity"
+                />
+                {/* Mobile: smaller version */}
+                <Image
+                  src="/JOINWHATSAPP.webp"
+                  alt="Join WhatsApp Group"
+                  width={110}
+                  height={32}
+                  className="h-8 w-auto sm:hidden hover:opacity-90 transition-opacity"
+                />
+              </a>
+              
               <Link href="/help">
                 <Button 
                   variant="ghost" 
