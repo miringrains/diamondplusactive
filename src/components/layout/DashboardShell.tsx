@@ -86,20 +86,21 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                 rel="noopener noreferrer"
                 className="flex-shrink-0"
               >
+                {/* Desktop: larger version */}
+                <Image
+                  src="/JOINWHATSAPP.webp"
+                  alt="Join WhatsApp Group"
+                  width={180}
+                  height={52}
+                  className="h-11 w-auto hidden md:block hover:opacity-90 hover:scale-105 transition-all"
+                />
+                {/* Mobile: visible version */}
                 <Image
                   src="/JOINWHATSAPP.webp"
                   alt="Join WhatsApp Group"
                   width={140}
                   height={40}
-                  className="h-9 w-auto hidden sm:block hover:opacity-90 transition-opacity"
-                />
-                {/* Mobile: smaller version */}
-                <Image
-                  src="/JOINWHATSAPP.webp"
-                  alt="Join WhatsApp Group"
-                  width={110}
-                  height={32}
-                  className="h-8 w-auto sm:hidden hover:opacity-90 transition-opacity"
+                  className="h-10 w-auto md:hidden hover:opacity-90 transition-opacity"
                 />
               </a>
               
