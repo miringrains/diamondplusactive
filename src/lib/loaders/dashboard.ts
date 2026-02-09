@@ -172,10 +172,10 @@ export async function getWelcomeVideos(): Promise<WelcomeVideo[]> {
     },
     {
       id: '4',
-      title: 'Coming Soon',
+      title: 'LeadGen System',
       description: null,
-      muxPlaybackId: null,
-      duration: null,
+      muxPlaybackId: 'crwlkghZAZNzftqx00Z02oyekmuHQuBHKTFMEYGYLQOK8',
+      duration: 1426, // 23:46
       thumbnailUrl: null,
       order: 4
     },
