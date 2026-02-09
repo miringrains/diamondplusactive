@@ -153,7 +153,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 <Select 
                   value={formData.qaAttendance} 
                   onValueChange={(value) => handleChange('qaAttendance', value)}
-                  required
                 >
                   <SelectTrigger className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900">
                     <SelectValue placeholder="Select an option" className="text-gray-900" />
@@ -188,7 +187,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 <Select 
                   value={formData.accountabilityEmails} 
                   onValueChange={(value) => handleChange('accountabilityEmails', value)}
-                  required
                 >
                   <SelectTrigger className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900">
                     <SelectValue placeholder="Select an option" className="text-gray-900" />
@@ -234,7 +232,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     name="absCount"
                     type="number"
                     min="0"
-                    required
                     value={formData.absCount}
                     onChange={(e) => handleChange('absCount', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -251,7 +248,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     name="closings"
                     type="number"
                     min="0"
-                    required
                     value={formData.closings}
                     onChange={(e) => handleChange('closings', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -270,7 +266,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     name="activeListings"
                     type="number"
                     min="0"
-                    required
                     value={formData.activeListings}
                     onChange={(e) => handleChange('activeListings', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -287,7 +282,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     name="pendingDeals"
                     type="number"
                     min="0"
-                    required
                     value={formData.pendingDeals}
                     onChange={(e) => handleChange('pendingDeals', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -307,7 +301,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     type="number"
                     min="0"
                     step="0.01"
-                    required
                     value={formData.grossCommissions}
                     onChange={(e) => handleChange('grossCommissions', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -324,7 +317,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                     name="prospectsAdded"
                     type="number"
                     min="0"
-                    required
                     value={formData.prospectsAdded}
                     onChange={(e) => handleChange('prospectsAdded', e.target.value)}
                     className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -348,7 +340,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 </Label>
                 <Textarea
                   id="impossibleGoal"
-                  required
                   value={formData.impossibleGoal}
                   onChange={(e) => handleChange('impossibleGoal', e.target.value)}
                   className="min-h-[100px] bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900 resize-none"
@@ -362,7 +353,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 </Label>
                 <Textarea
                   id="biggestConstraint"
-                  required
                   value={formData.biggestConstraint}
                   onChange={(e) => handleChange('biggestConstraint', e.target.value)}
                   className="min-h-[100px] bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900 resize-none"
@@ -381,7 +371,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                       id="goal1"
                       name="goal1"
                       type="text"
-                      required
                       value={formData.goal1}
                       onChange={(e) => handleChange('goal1', e.target.value)}
                       className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -394,7 +383,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                       id="goal2"
                       name="goal2"
                       type="text"
-                      required
                       value={formData.goal2}
                       onChange={(e) => handleChange('goal2', e.target.value)}
                       className="h-11 bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900"
@@ -455,7 +443,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 </Label>
                 <Textarea
                   id="improvementSuggestions"
-                  required
                   value={formData.improvementSuggestions}
                   onChange={(e) => handleChange('improvementSuggestions', e.target.value)}
                   className="min-h-[120px] bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900 resize-none"
@@ -478,7 +465,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 </Label>
                 <Textarea
                   id="additionalNotes"
-                  required
                   value={formData.additionalNotes}
                   onChange={(e) => handleChange('additionalNotes', e.target.value)}
                   className="min-h-[120px] bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900 resize-none"
@@ -492,7 +478,6 @@ export function BusinessAuditForm({ user }: BusinessAuditFormProps) {
                 </Label>
                 <Textarea
                   id="whatInspiredYou"
-                  required
                   value={formData.whatInspiredYou}
                   onChange={(e) => handleChange('whatInspiredYou', e.target.value)}
                   className="min-h-[120px] bg-gray-50 border-gray-300 focus:bg-white transition-colors text-gray-900 resize-none"
