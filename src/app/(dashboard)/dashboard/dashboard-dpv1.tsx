@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { CalendarDays, FileText, HelpCircle, Mic, Play, Video, Bot, Users, ScrollText, Award, BookOpen, FileSearch, Target } from "lucide-react"
+import { CalendarDays, FileText, HelpCircle, Mic, Play, Video, Bot, Users, ScrollText, Award, BookOpen, FileSearch, Target, MessageCircleQuestion } from "lucide-react"
 import { getRecentPodcasts, getWelcomeVideos } from "@/lib/loaders/dashboard"
 import { PodcastPlayer } from "@/components/podcast-player"
 import { MuxThumbnail } from "@/components/mux-thumbnail"
@@ -41,6 +41,25 @@ export default async function DashboardPage() {
           priority
           sizes="100vw"
         />
+      </div>
+
+      {/* Questions for Monday Call Banner */}
+      <div className="px-6 lg:px-12 pt-8">
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLScvqDcCG66zPLFiQr_wkl9OD1HQbIr5GB2W_lB7fh3VcRTSww/viewform"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <Card className="bg-gradient-to-r from-[#1F1F23] to-[#2A2A30] border-none hover:from-[#252529] hover:to-[#2F2F35] transition-all cursor-pointer">
+            <CardContent className="p-5 flex items-center justify-center gap-3">
+              <MessageCircleQuestion className="h-6 w-6 text-[#176FFF] flex-shrink-0" />
+              <h3 className="text-base font-medium text-white">
+                Submit your questions for Monday Zoom Group Calls
+              </h3>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       <div className="px-6 lg:px-12 py-12 lg:py-16">
