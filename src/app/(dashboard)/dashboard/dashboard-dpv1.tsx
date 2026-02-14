@@ -45,21 +45,25 @@ export default async function DashboardPage() {
 
       {/* Questions for Monday Call Banner */}
       <div className="px-6 lg:px-12 pt-8">
-        <a
-          href="https://docs.google.com/forms/d/e/1FAIpQLScvqDcCG66zPLFiQr_wkl9OD1HQbIr5GB2W_lB7fh3VcRTSww/viewform"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <Card className="bg-gradient-to-r from-[#1F1F23] to-[#2A2A30] border-none hover:from-[#252529] hover:to-[#2F2F35] transition-all cursor-pointer">
-            <CardContent className="p-5 flex items-center justify-center gap-3">
+        <Card className="bg-gradient-to-r from-[#1F1F23] to-[#2A2A30] border-none">
+          <CardContent className="py-5 px-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3">
               <MessageCircleQuestion className="h-6 w-6 text-[#176FFF] flex-shrink-0" />
               <h3 className="text-base font-medium text-white">
                 Submit your questions for Monday Zoom Group Calls
               </h3>
-            </CardContent>
-          </Card>
-        </a>
+            </div>
+            <Button className="bg-[#176FFF] hover:bg-[#1460E5] text-white" size="sm" asChild>
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLScvqDcCG66zPLFiQr_wkl9OD1HQbIr5GB2W_lB7fh3VcRTSww/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Submit Question
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="px-6 lg:px-12 py-12 lg:py-16">
