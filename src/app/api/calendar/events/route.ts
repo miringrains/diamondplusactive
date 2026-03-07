@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { auth } from '@/lib/supabase/auth-server'
 
+export const dynamic = 'force-dynamic'
+
 const calendar = google.calendar('v3')
 const API_KEY = process.env.GOOGLE_API_KEY
 
@@ -54,8 +56,11 @@ export async function GET(req: NextRequest) {
     const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
 
     // Start with portal-managed events (filtered by date range)
+    const minDate = new Date(timeMin).getTime()
+    const maxDate = new Date(timeMax).getTime()
     const filteredPortalEvents = portalEvents.filter(event => {
-      return event.start >= timeMin && event.start <= timeMax
+      const eventTime = new Date(event.start).getTime()
+      return eventTime >= minDate && eventTime <= maxDate
     })
 
     // Also fetch from Google Calendar if configured (for recurring coaching calls, etc.)
