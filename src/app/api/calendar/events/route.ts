@@ -2,117 +2,113 @@ import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { auth } from '@/lib/supabase/auth-server'
 
-// Initialize Google Calendar API
 const calendar = google.calendar('v3')
-
-// Initialize OAuth2 client
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.NEXT_PUBLIC_URL + '/api/calendar/callback'
-)
-
-// For now, we'll use API key for public calendar access
-// Later we can implement full OAuth flow if needed
 const API_KEY = process.env.GOOGLE_API_KEY
+
+// Portal-managed events — add events here directly, no Google Calendar write access needed.
+// The "Add to Google Calendar" button on the frontend lets users save these to their personal calendars.
+const ZOOM_LINK = 'https://us02web.zoom.us/j/84578777331?pwd=Bzafk5iBbkrFdrUtqpp2Pwmq0AKWso.1'
+const FB_GROUP = 'https://www.facebook.com/groups/4267238183550978'
+
+const portalEvents = [
+  {
+    id: 'workshop-cold-call-day1',
+    title: 'Never Make Another Cold Call Again - Day 1',
+    description: `3-Day Live Workshop: Never Make Another Cold Call Again\n\nDay 1 of 3\n\nZoom Meeting Link: ${ZOOM_LINK}\n\nFacebook Group: ${FB_GROUP}\nJoin the private workshop group for discussions and resources.`,
+    start: '2026-03-09T13:00:00-05:00',
+    end: '2026-03-09T15:00:00-05:00',
+    location: ZOOM_LINK,
+    hasVirtualMeeting: true,
+  },
+  {
+    id: 'workshop-cold-call-day2',
+    title: 'Never Make Another Cold Call Again - Day 2',
+    description: `3-Day Live Workshop: Never Make Another Cold Call Again\n\nDay 2 of 3\n\nZoom Meeting Link: ${ZOOM_LINK}\n\nFacebook Group: ${FB_GROUP}\nJoin the private workshop group for discussions and resources.`,
+    start: '2026-03-10T13:00:00-05:00',
+    end: '2026-03-10T15:00:00-05:00',
+    location: ZOOM_LINK,
+    hasVirtualMeeting: true,
+  },
+  {
+    id: 'workshop-cold-call-day3',
+    title: 'Never Make Another Cold Call Again - Day 3',
+    description: `3-Day Live Workshop: Never Make Another Cold Call Again\n\nDay 3 of 3\n\nZoom Meeting Link: ${ZOOM_LINK}\n\nFacebook Group: ${FB_GROUP}\nJoin the private workshop group for discussions and resources.`,
+    start: '2026-03-11T13:00:00-05:00',
+    end: '2026-03-11T15:00:00-05:00',
+    location: ZOOM_LINK,
+    hasVirtualMeeting: true,
+  },
+]
 
 export async function GET(req: NextRequest) {
   try {
-    // Check authentication
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const calendarId = process.env.GOOGLE_CALENDAR_ID
-    if (!calendarId) {
-      return NextResponse.json({ error: 'Calendar ID not configured' }, { status: 500 })
-    }
 
-    // Get query parameters for date range
     const searchParams = req.nextUrl.searchParams
     const timeMin = searchParams.get('timeMin') || new Date().toISOString()
-    const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // 90 days
+    const timeMax = searchParams.get('timeMax') || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Fetch events from Google Calendar
-    // Try without authentication first (for public calendars)
-    let response
-    try {
-      // First attempt: no auth (works for fully public calendars)
-      response = await calendar.events.list({
-        calendarId,
-        timeMin,
-        timeMax,
-        singleEvents: true,
-        orderBy: 'startTime',
-        maxResults: 50,
-      })
-    } catch (error: any) {
-      // If that fails, we need an API key
-      console.log('[Calendar Events] Public access failed, API key required:', error.message)
-      
-      if (!API_KEY) {
-        // Return a helpful message about getting an API key
-        return NextResponse.json({ 
-          error: 'Calendar requires API key',
-          message: 'This calendar requires authentication. Please add GOOGLE_API_KEY to your .env file.',
-          setup: {
-            steps: [
-              '1. Go to https://console.cloud.google.com',
-              '2. Select your project',
-              '3. Enable Google Calendar API',
-              '4. Create an API Key in Credentials',
-              '5. Add to .env: GOOGLE_API_KEY=your-key'
-            ]
-          },
-          calendarId // Include for debugging
-        }, { status: 400 })
+    // Start with portal-managed events (filtered by date range)
+    const filteredPortalEvents = portalEvents.filter(event => {
+      return event.start >= timeMin && event.start <= timeMax
+    })
+
+    // Also fetch from Google Calendar if configured (for recurring coaching calls, etc.)
+    let googleEvents: any[] = []
+    if (calendarId) {
+      try {
+        let response
+        try {
+          response = await calendar.events.list({
+            calendarId,
+            timeMin,
+            timeMax,
+            singleEvents: true,
+            orderBy: 'startTime',
+            maxResults: 50,
+          })
+        } catch {
+          if (API_KEY) {
+            response = await calendar.events.list({
+              calendarId,
+              timeMin,
+              timeMax,
+              singleEvents: true,
+              orderBy: 'startTime',
+              maxResults: 50,
+              key: API_KEY,
+            })
+          }
+        }
+
+        if (response?.data?.items) {
+          googleEvents = response.data.items.map(event => ({
+            id: event.id,
+            title: event.summary || 'Untitled Event',
+            description: event.description,
+            start: event.start?.dateTime || event.start?.date,
+            end: event.end?.dateTime || event.end?.date,
+            location: event.location,
+            hasVirtualMeeting: event.description?.includes('zoom') || event.location?.includes('zoom'),
+          }))
+        }
+      } catch (error: any) {
+        console.error('[Calendar Events] Google Calendar fetch failed:', error.message)
       }
-      
-      // Try with API key
-      response = await calendar.events.list({
-        calendarId,
-        timeMin,
-        timeMax,
-        singleEvents: true,
-        orderBy: 'startTime',
-        maxResults: 50,
-        key: API_KEY,
-      })
     }
 
-    const events = response.data.items || []
+    // Merge portal events + Google Calendar events, sorted by start time
+    const allEvents = [...filteredPortalEvents, ...googleEvents]
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
 
-    // Transform events to our format
-    const transformedEvents = events.map(event => ({
-      id: event.id,
-      title: event.summary || 'Untitled Event',
-      description: event.description,
-      start: event.start?.dateTime || event.start?.date,
-      end: event.end?.dateTime || event.end?.date,
-      location: event.location,
-      // Don't expose meeting links directly - handle those separately
-      hasVirtualMeeting: event.description?.includes('zoom') || event.location?.includes('zoom'),
-    }))
-
-    return NextResponse.json({ 
-      events: transformedEvents,
-      calendar: {
-        title: response.data.summary,
-        description: response.data.description,
-      }
-    })
+    return NextResponse.json({ events: allEvents })
   } catch (error: any) {
     console.error('[Calendar Events] Error:', error)
-    
-    // If it's an API key issue, return helpful message
-    if (error.code === 403) {
-      return NextResponse.json({ 
-        error: 'Calendar API not configured. Please add GOOGLE_API_KEY to environment variables.',
-        setup: 'Get API key from Google Cloud Console > APIs & Services > Credentials'
-      }, { status: 500 })
-    }
-    
     return NextResponse.json({ 
       error: 'Failed to fetch calendar events',
       details: error.message 
