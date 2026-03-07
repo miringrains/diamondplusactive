@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, Home, ChevronRight, Send, Clock, Users, Dumbbell, Hotel } from 'lucide-react'
+import { Calendar, MapPin, Home, ChevronRight, Send, Clock, Users, Dumbbell, Hotel, Video, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
@@ -47,6 +47,110 @@ export default function WorkshopsPage() {
       </section>
       
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+
+        {/* Never Make Another Cold Call Again - 3 Day Virtual Workshop */}
+        <Card className="bg-white shadow-sm border-gray-200 max-w-4xl mx-auto mb-12 relative overflow-hidden">
+          <div className="absolute top-4 right-4">
+            <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide animate-pulse">
+              Live This Week
+            </span>
+          </div>
+          <CardHeader>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Never Make Another Cold Call Again
+              </h2>
+              <p className="text-xl text-[#176FFF] font-semibold mb-2">
+                March 9th, 10th &amp; 11th — 1:00 PM - 3:00 PM EST
+              </p>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                A 3-day live virtual workshop on hiring, training, and deploying Inside Sales Agents (ISAs) so you can stop cold calling for good.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6 px-6 lg:px-8">
+
+            <div className="bg-blue-50 rounded-lg p-6">
+              <p className="text-lg font-semibold text-gray-900 mb-2">
+                This workshop is INCLUDED in your Diamond+ membership
+              </p>
+              <p className="text-gray-700">
+                You have full access as a Diamond+ Coaching student — no additional purchase needed.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-900 border-b pb-2">Schedule</h3>
+              <div className="grid gap-3">
+                {[
+                  { day: 'Day 1', date: 'Monday, March 9th', time: '1:00 PM - 3:00 PM EST' },
+                  { day: 'Day 2', date: 'Tuesday, March 10th', time: '1:00 PM - 3:00 PM EST' },
+                  { day: 'Day 3', date: 'Wednesday, March 11th', time: '1:00 PM - 3:00 PM EST' },
+                ].map((session) => (
+                  <div key={session.day} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4">
+                    <div className="bg-[#176FFF] text-white text-sm font-bold px-3 py-1.5 rounded">
+                      {session.day}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{session.date}</p>
+                      <p className="text-gray-600 text-sm">{session.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-amber-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Video className="h-5 w-5 text-amber-600" />
+                <h4 className="font-semibold text-gray-900">How to Join</h4>
+              </div>
+              <p className="text-gray-700">
+                The Zoom link for each session is available on your{' '}
+                <Link href="/calendar" className="text-[#176FFF] font-medium hover:underline">
+                  Calendar
+                </Link>
+                . Click any workshop event to see the join link and add it to your personal calendar.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-5 w-5 text-[#176FFF]" />
+                <h4 className="font-semibold text-gray-900">Workshop Facebook Group</h4>
+              </div>
+              <p className="text-gray-700 mb-4">
+                Join the private Facebook group for workshop discussions, resources, and live interaction with other participants.
+              </p>
+              <Button className="bg-[#1877F2] hover:bg-[#166FE5] text-white" size="sm" asChild>
+                <a
+                  href="https://www.facebook.com/groups/4267238183550978"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Join Facebook Group
+                </a>
+              </Button>
+            </div>
+
+            <div className="border-t pt-8 text-center">
+              <Button
+                className="bg-[#176FFF] hover:bg-[#1460E5] text-white px-8 py-6 text-lg font-semibold"
+                asChild
+              >
+                <a
+                  href="https://zerotodiamond.com/3day-workshop-page"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-2 h-5 w-5" />
+                  View Full Workshop Details
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Listing Selling Secrets Workshop */}
         <Card className="bg-white shadow-sm border-gray-200 max-w-4xl mx-auto mb-12">
