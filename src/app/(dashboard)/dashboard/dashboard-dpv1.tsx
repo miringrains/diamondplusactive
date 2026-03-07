@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const now = new Date()
-  const workshopStart = new Date('2026-03-08T00:00:00-05:00')
+  const workshopStart = new Date('2026-03-07T00:00:00-05:00')
   const workshopEnd = new Date('2026-03-13T00:00:00-05:00')
   const isWorkshopWeek = now >= workshopStart && now < workshopEnd
 
