@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const now = new Date()
-  const workshopStart = new Date('2026-03-08T00:00:00-05:00')
+  const workshopStart = new Date('2026-03-07T00:00:00-05:00')
   const workshopEnd = new Date('2026-03-13T00:00:00-05:00')
   const isWorkshopWeek = now >= workshopStart && now < workshopEnd
 
@@ -48,22 +48,34 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Dashboard Banner — swaps between workshop promo (March 8-12) and Monday questions */}
+      {/* Dashboard Banner — swaps between workshop promo and Monday questions */}
       <div className="px-6 lg:px-12 pt-8">
         {isWorkshopWeek ? (
-          <Card className="bg-gradient-to-r from-[#1F1F23] to-[#2A2A30] border-none">
-            <CardContent className="py-5 px-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-3">
-                <Tv className="h-6 w-6 text-[#F59E0B] flex-shrink-0" />
-                <h3 className="text-base font-medium text-white">
-                  Never Make Another Cold Call Again — Live March 9-11, 1-3 PM EST
-                </h3>
+          <Card className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] border-none shadow-lg">
+            <CardContent className="py-6 px-6 flex flex-col items-center justify-center gap-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-black text-center">
+                Never Make Another Cold Call Again
+              </h2>
+              <p className="text-base font-semibold text-black/80 text-center">
+                3-Day Live Workshop — March 9-11 at 1 PM EST
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button className="bg-black hover:bg-black/80 text-white font-bold px-8 py-3 text-base" asChild>
+                  <a
+                    href="https://us02web.zoom.us/j/84578777331?pwd=Bzafk5iBbkrFdrUtqpp2Pwmq0AKWso.1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Tv className="mr-2 h-5 w-5" />
+                    Join Zoom Now
+                  </a>
+                </Button>
+                <Button className="bg-black/20 hover:bg-black/30 text-black font-semibold border-none" size="sm" asChild>
+                  <Link href="/workshops">
+                    Workshop Details
+                  </Link>
+                </Button>
               </div>
-              <Button className="bg-[#F59E0B] hover:bg-[#D97706] text-black font-semibold" size="sm" asChild>
-                <Link href="/workshops">
-                  View Workshop
-                </Link>
-              </Button>
             </CardContent>
           </Card>
         ) : (

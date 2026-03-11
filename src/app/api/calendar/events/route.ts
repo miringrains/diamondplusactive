@@ -14,6 +14,15 @@ const FB_GROUP = 'https://www.facebook.com/groups/4267238183550978'
 
 const portalEvents = [
   {
+    id: 'workshop-cold-call-bonus',
+    title: 'Never Make Another Cold Call Again - Bonus Session',
+    description: `3-Day Live Workshop: Never Make Another Cold Call Again\n\nBonus Session\n\nZoom Meeting Link: ${ZOOM_LINK}\n\nFacebook Group: ${FB_GROUP}\nJoin the private workshop group for discussions and resources.`,
+    start: '2026-03-08T13:00:00-04:00',
+    end: '2026-03-08T15:00:00-04:00',
+    location: ZOOM_LINK,
+    hasVirtualMeeting: true,
+  },
+  {
     id: 'workshop-cold-call-day1',
     title: 'Never Make Another Cold Call Again - Day 1',
     description: `3-Day Live Workshop: Never Make Another Cold Call Again\n\nDay 1 of 3\n\nZoom Meeting Link: ${ZOOM_LINK}\n\nFacebook Group: ${FB_GROUP}\nJoin the private workshop group for discussions and resources.`,
