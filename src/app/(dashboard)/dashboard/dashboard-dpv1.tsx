@@ -57,7 +57,7 @@ export default async function DashboardPage() {
                 Never Make Another Cold Call Again
               </h2>
               <p className="text-base font-semibold text-black/80 text-center">
-                3-Day Live Workshop — March 9-11 at 1 PM EST
+                Bonus Day Tomorrow March 12th at 1 PM EST
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <Button className="bg-black hover:bg-black/80 text-white font-bold px-8 py-3 text-base" asChild>
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
                     rel="noopener noreferrer"
                   >
                     <Tv className="mr-2 h-5 w-5" />
-                    Join Zoom Now
+                    Join Zoom
                   </a>
                 </Button>
                 <Button className="bg-black/20 hover:bg-black/30 text-black font-semibold border-none" size="sm" asChild>
