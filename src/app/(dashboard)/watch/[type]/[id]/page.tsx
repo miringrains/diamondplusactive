@@ -154,6 +154,7 @@ async function getVideoContent(type: string, id: string) {
     
     // Human-readable challenge titles
     const challengeTitles: Record<string, string> = {
+      'workshop-cold-call': 'The Never Make Another Cold Call Again Workshop',
       'challenge-10': 'Challenge 10: Two Day Content Challenge',
       'challenge-9': 'Challenge 9: Set More Listing Appointments',
       'challenge-8': 'Challenge 8',

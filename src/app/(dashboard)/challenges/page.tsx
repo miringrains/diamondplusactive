@@ -6,6 +6,16 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function ChallengesPage() {
+  // Fetch Workshop: Never Make Another Cold Call Again
+  const workshopColdCallData = await prisma.challenge_videos.findMany({
+    where: {
+      challenge_id: 'workshop-cold-call',
+      published: true,
+      mux_playback_id: { not: null }
+    },
+    orderBy: { order_index: 'asc' }
+  })
+
   // Fetch Challenge 10 videos
   const challenge10Data = await prisma.challenge_videos.findMany({
     where: {
@@ -62,6 +72,17 @@ export default async function ChallengesPage() {
     }
   })
 
+  // Transform Workshop
+  const workshopColdCallVideos = workshopColdCallData.map((video) => ({
+    id: video.id,
+    title: video.title,
+    description: video.description,
+    muxPlaybackId: video.mux_playback_id,
+    thumbnailUrl: video.thumbnail_url,
+    duration: video.duration,
+    requiresToken: video.mux_policy === 'signed'
+  }))
+
   // Transform Challenge 10
   const challenge10Videos = challenge10Data.map((video) => ({
     id: video.id,
@@ -106,5 +127,5 @@ export default async function ChallengesPage() {
     requiresToken: video.mux_policy === 'signed'
   }))
 
-  return <ChallengesClient challenge10Videos={challenge10Videos} challenge9Videos={challenge9Videos} challenge8Videos={challenge8Videos} challenge6Videos={challenge6Videos} />
+  return <ChallengesClient workshopColdCallVideos={workshopColdCallVideos} challenge10Videos={challenge10Videos} challenge9Videos={challenge9Videos} challenge8Videos={challenge8Videos} challenge6Videos={challenge6Videos} />
 }
